@@ -89,10 +89,16 @@ export default function AuthPage() {
         router.push("/home");
       }
     } catch (error: any) {
+      let description = "An unexpected error occurred. Please try again.";
+      if (error.code === 'auth/invalid-credential' || error.code === 'auth/user-not-found') {
+        description = "Invalid email or password. If you don't have an account, please sign up.";
+      } else if (error.message) {
+        description = error.message;
+      }
       toast({
         variant: "destructive",
         title: "Authentication Error",
-        description: error.message || "An unexpected error occurred.",
+        description: description,
       });
     } finally {
       setIsSubmitting(false);
@@ -128,7 +134,7 @@ export default function AuthPage() {
           <CardDescription>
             {isSigningUp
               ? "Enter your details below to create your account."
-              : "Sign in to continue to your dashboard."}
+              : "Sign in to continue. If you don't have an account, please sign up first."}
           </CardDescription>
         </CardHeader>
         <CardContent>
