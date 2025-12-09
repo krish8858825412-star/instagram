@@ -109,7 +109,7 @@ export default function AuthPage() {
 
   if (authLoading || user) {
     return (
-      <div className="flex h-screen w-screen items-center justify-center">
+      <div className="flex h-screen w-screen items-center justify-center bg-background">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
@@ -123,7 +123,7 @@ export default function AuthPage() {
           LoginFlow
         </h1>
       </div>
-      <Card className="w-full max-w-md shadow-xl">
+      <Card className="w-full max-w-md bg-card/50 backdrop-blur-lg border-border/20 shadow-xl">
         <CardHeader className="text-center">
           <CardTitle className="text-2xl font-bold tracking-tight">
             {isSigningUp ? "Create an Account" : "Welcome Back"}

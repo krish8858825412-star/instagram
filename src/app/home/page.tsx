@@ -47,13 +47,13 @@ export default function HomePage() {
   if (loading || !user) {
     return (
       <div className="flex h-screen w-full items-center justify-center bg-background">
-        <Skeleton className="h-screen w-full" />
+        <Skeleton className="h-screen w-full bg-transparent" />
       </div>
     );
   }
 
   return (
-    <div className="flex min-h-screen w-full flex-col bg-background">
+    <div className="flex min-h-screen w-full flex-col">
       <Header />
       <main className="flex flex-1 flex-col gap-4 p-4 md:gap-8 md:p-8">
         <div className="flex items-center">
@@ -63,7 +63,7 @@ export default function HomePage() {
         </div>
         <Separator />
         <div className="grid gap-4 md:gap-8">
-          <Card className="shadow-md">
+          <Card className="shadow-md bg-card/50 backdrop-blur-lg border-border/20">
             <CardHeader>
               <CardTitle>Your Personalized Dashboard</CardTitle>
             </CardHeader>
@@ -83,7 +83,7 @@ export default function HomePage() {
                 </Alert>
               ) : (
                 <div className="prose prose-sm max-w-none text-foreground">
-                    <pre className="whitespace-pre-wrap font-body text-base">
+                    <pre className="whitespace-pre-wrap font-body text-base bg-transparent">
                         {layoutSuggestion}
                     </pre>
                 </div>
