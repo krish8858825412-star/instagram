@@ -7,9 +7,8 @@ import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   signOut as firebaseSignOut,
-  signInWithPopup,
 } from "firebase/auth";
-import { auth, googleProvider } from "@/lib/firebase";
+import { auth } from "@/lib/firebase";
 import { Loader2 } from "lucide-react";
 
 interface AuthContextType {
@@ -18,7 +17,6 @@ interface AuthContextType {
   signIn: (email: string, pass: string) => Promise<any>;
   signUp: (email: string, pass: string) => Promise<any>;
   signOut: () => Promise<void>;
-  signInWithGoogle: () => Promise<any>;
 }
 
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -48,17 +46,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return firebaseSignOut(auth);
   };
   
-  const signInWithGoogle = (): Promise<any> => {
-    return signInWithPopup(auth, googleProvider);
-  };
-
   const value = {
     user,
     loading,
     signUp,
     signIn,
     signOut,
-    signInWithGoogle
   };
 
   if (loading) {

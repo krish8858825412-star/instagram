@@ -5,7 +5,6 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { useRouter } from "next/navigation";
-import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import {
@@ -20,14 +19,12 @@ import {
   FormControl,
   FormField,
   FormItem,
-  FormLabel,
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
-import { GoogleLogo, LogoIcon } from "@/components/icons";
-import { Loader2, Mail, Lock, User } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { LogoIcon } from "@/components/icons";
+import { Loader2, Mail, Lock } from "lucide-react";
 
 const signUpSchema = z.object({
   email: z.string().email({ message: "Invalid email address." }),
@@ -48,7 +45,6 @@ export default function AuthPage() {
     loading: authLoading,
     signUp,
     signIn,
-    signInWithGoogle,
   } = useAuth();
   const router = useRouter();
   const { toast } = useToast();
@@ -91,19 +87,6 @@ export default function AuthPage() {
       });
     } finally {
       setIsSubmitting(false);
-    }
-  };
-
-  const handleGoogleSignIn = async () => {
-    try {
-      await signInWithGoogle();
-      router.push("/home");
-    } catch (error: any) {
-      toast({
-        variant: "destructive",
-        title: "Google Sign-In Error",
-        description: error.message || "Could not sign in with Google.",
-      });
     }
   };
   
@@ -182,26 +165,6 @@ export default function AuthPage() {
               </Button>
             </form>
           </Form>
-
-          <div className="relative my-6">
-            <div className="absolute inset-0 flex items-center">
-              <span className="w-full border-t" />
-            </div>
-            <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-card px-2 text-muted-foreground">
-                Or continue with
-              </span>
-            </div>
-          </div>
-
-          <Button
-            variant="outline"
-            className="w-full"
-            onClick={handleGoogleSignIn}
-          >
-            <GoogleLogo className="mr-2 h-5 w-5" />
-            Google
-          </Button>
 
           <p className="mt-6 text-center text-sm text-muted-foreground">
             {isSigningUp
