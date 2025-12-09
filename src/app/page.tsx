@@ -52,10 +52,10 @@ export default function AuthPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
-    if (user) {
+    if (!authLoading && user) {
       router.push("/home");
     }
-  }, [user, router]);
+  }, [user, authLoading, router]);
 
   const form = useForm({
     resolver: zodResolver(isSigningUp ? signUpSchema : signInSchema),
@@ -85,7 +85,7 @@ export default function AuthPage() {
       }
     } catch (error: any) {
       let description = "An unexpected error occurred. Please try again.";
-      if (error.code === 'auth/invalid-credential' || error.code === 'auth/user-not-found') {
+      if (error.code === 'auth/invalid-credential' || error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
         description = "Invalid email or password. If you don't have an account, please sign up.";
       } else if (error.code === 'auth/email-already-in-use') {
         description = "This email is already in use. Please sign in or use a different email.";
@@ -131,7 +131,7 @@ export default function AuthPage() {
           <CardDescription>
             {isSigningUp
               ? "Enter your details below to create your account."
-              : "Sign in to continue. If you don't have an account, please sign up first."}
+              : "Sign in to continue. If you don't have an account, you need to sign up first."}
           </CardDescription>
         </CardHeader>
         <CardContent>
