@@ -39,10 +39,6 @@ const signInSchema = z.object({
   password: z.string().min(1, { message: "Password is required." }),
 });
 
-// A helper schema to handle both cases, since name is not in signInSchema
-const formSchema = z.union([signUpSchema, signInSchema]);
-
-
 export default function AuthPage() {
   const [isSigningUp, setIsSigningUp] = useState(false);
   const {
@@ -61,7 +57,7 @@ export default function AuthPage() {
     }
   }, [user, router]);
 
-  const form = useForm<z.infer<typeof formSchema>>({
+  const form = useForm({
     resolver: zodResolver(isSigningUp ? signUpSchema : signInSchema),
     defaultValues: {
       name: "",
@@ -70,11 +66,10 @@ export default function AuthPage() {
     },
   });
 
-  const onSubmit = async (values: z.infer<typeof formSchema>) => {
+  const onSubmit = async (values: z.infer<typeof signUpSchema | typeof signInSchema>) => {
     setIsSubmitting(true);
     try {
       if (isSigningUp) {
-        // We can safely assert the type here because of the resolver
         const { name, email, password } = values as z.infer<typeof signUpSchema>;
         await signUp(name, email, password);
         toast({
@@ -92,6 +87,8 @@ export default function AuthPage() {
       let description = "An unexpected error occurred. Please try again.";
       if (error.code === 'auth/invalid-credential' || error.code === 'auth/user-not-found') {
         description = "Invalid email or password. If you don't have an account, please sign up.";
+      } else if (error.code === 'auth/email-already-in-use') {
+        description = "This email is already in use. Please sign in or use a different email.";
       } else if (error.message) {
         description = error.message;
       }
