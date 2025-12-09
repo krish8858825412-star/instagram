@@ -29,7 +29,7 @@ export function Header() {
       <nav className="flex w-full items-center justify-between">
         <a href="/home" className="flex items-center gap-2 text-lg font-semibold md:text-base">
           <LogoIcon className="h-8 w-8 text-primary" />
-          <span className="text-xl font-bold">LoginFlow</span>
+          <span className="text-xl font-bold">Home</span>
         </a>
 
         <div className="flex items-center gap-4">
