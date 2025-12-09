@@ -2,12 +2,13 @@ import { initializeApp, getApps, getApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
 
 const firebaseConfig = {
-  "projectId": "studio-9370066213-e8465",
-  "appId": "1:814198702972:web:3fc7d967138f1dd1e25af9",
-  "apiKey": "AIzaSyA5oWqovB78-ZA2EH2WaK9NOQTvAiv3fUM",
-  "authDomain": "studio-9370066213-e8465.firebaseapp.com",
-  "measurementId": "",
-  "messagingSenderId": "814198702972"
+  apiKey: "AIzaSyD1rFDsXNwqnOrawI4S_GxbGPOwDmeAkYE",
+  authDomain: "spare-study.firebaseapp.com",
+  databaseURL: "https://spare-study-default-rtdb.firebaseio.com",
+  projectId: "spare-study",
+  storageBucket: "spare-study.firebasestorage.app",
+  messagingSenderId: "729648401813",
+  appId: "1:729648401813:web:bd6daf4f54133d74c1fa9c"
 };
 
 // Initialize Firebase
