@@ -25,6 +25,7 @@ import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { LogoIcon } from "@/components/icons";
 import { Loader2, Mail, Lock, User as UserIcon } from "lucide-react";
+import { SplashScreen } from "@/components/splash-screen";
 
 const signUpSchema = z.object({
   name: z.string().min(2, { message: "Name must be at least 2 characters." }),
@@ -108,11 +109,7 @@ export default function AuthPage() {
   }
 
   if (authLoading || user) {
-    return (
-      <div className="flex h-screen w-screen items-center justify-center bg-background">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
+    return <SplashScreen />;
   }
 
   return (
