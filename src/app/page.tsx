@@ -24,9 +24,10 @@ import {
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { LogoIcon } from "@/components/icons";
-import { Loader2, Mail, Lock } from "lucide-react";
+import { Loader2, Mail, Lock, User as UserIcon } from "lucide-react";
 
 const signUpSchema = z.object({
+  name: z.string().min(2, { message: "Name must be at least 2 characters." }),
   email: z.string().email({ message: "Invalid email address." }),
   password: z
     .string()
@@ -37,6 +38,10 @@ const signInSchema = z.object({
   email: z.string().email({ message: "Invalid email address." }),
   password: z.string().min(1, { message: "Password is required." }),
 });
+
+// A helper schema to handle both cases, since name is not in signInSchema
+const formSchema = z.union([signUpSchema, signInSchema]);
+
 
 export default function AuthPage() {
   const [isSigningUp, setIsSigningUp] = useState(false);
@@ -56,19 +61,22 @@ export default function AuthPage() {
     }
   }, [user, router]);
 
-  const form = useForm({
+  const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(isSigningUp ? signUpSchema : signInSchema),
     defaultValues: {
+      name: "",
       email: "",
       password: "",
     },
   });
 
-  const onSubmit = async (values: z.infer<typeof signUpSchema>) => {
+  const onSubmit = async (values: z.infer<typeof formSchema>) => {
     setIsSubmitting(true);
     try {
       if (isSigningUp) {
-        await signUp(values.email, values.password);
+        // We can safely assert the type here because of the resolver
+        const { name, email, password } = values as z.infer<typeof signUpSchema>;
+        await signUp(name, email, password);
         toast({
           title: "Success",
           description: "Account created successfully. Please sign in.",
@@ -76,7 +84,8 @@ export default function AuthPage() {
         setIsSigningUp(false);
         form.reset();
       } else {
-        await signIn(values.email, values.password);
+        const { email, password } = values as z.infer<typeof signInSchema>;
+        await signIn(email, password);
         router.push("/home");
       }
     } catch (error: any) {
@@ -118,13 +127,30 @@ export default function AuthPage() {
           </CardTitle>
           <CardDescription>
             {isSigningUp
-              ? "Enter your email and password to get started."
+              ? "Enter your details below to create your account."
               : "Sign in to continue to your dashboard."}
           </CardDescription>
         </CardHeader>
         <CardContent>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+              {isSigningUp && (
+                <div className="relative">
+                  <UserIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                  <FormField
+                    control={form.control}
+                    name="name"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormControl>
+                          <Input placeholder="Full Name" {...field} className="pl-10" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              )}
               <div className="relative">
                 <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
                 <FormField

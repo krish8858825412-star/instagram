@@ -7,6 +7,7 @@ import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   signOut as firebaseSignOut,
+  updateProfile,
 } from "firebase/auth";
 import { auth } from "@/lib/firebase";
 import { Loader2 } from "lucide-react";
@@ -15,7 +16,7 @@ interface AuthContextType {
   user: User | null;
   loading: boolean;
   signIn: (email: string, pass: string) => Promise<any>;
-  signUp: (email: string, pass: string) => Promise<any>;
+  signUp: (name: string, email: string, pass: string) => Promise<any>;
   signOut: () => Promise<void>;
 }
 
@@ -34,8 +35,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => unsubscribe();
   }, []);
 
-  const signUp = (email: string, password: string): Promise<any> => {
-    return createUserWithEmailAndPassword(auth, email, password);
+  const signUp = async (name: string, email: string, password: string): Promise<any> => {
+    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+    if (userCredential.user) {
+      await updateProfile(userCredential.user, { displayName: name });
+    }
+    return userCredential;
   };
 
   const signIn = (email: string, password: string): Promise<any> => {
