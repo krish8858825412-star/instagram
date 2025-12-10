@@ -33,6 +33,12 @@ const nextConfig: NextConfig = {
         hostname: 'studio-9370066213-e8465.firebaseapp.com',
         port: '',
         pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'i.ibb.co',
+        port: '',
+        pathname: '/**',
       }
     ],
   },
