@@ -38,6 +38,13 @@ export default function OrderDetailPage() {
     });
     router.push('/admin');
   };
+  
+  const handleToast = (feature: string) => {
+    toast({
+        title: 'Feature not implemented',
+        description: `The ${feature} functionality requires a backend and is not yet available.`,
+    });
+  }
 
   return (
     <div className="flex min-h-screen w-full flex-col bg-muted/40">
@@ -48,11 +55,11 @@ export default function OrderDetailPage() {
         </Button>
         <h1 className="text-xl font-bold">Order Details</h1>
         <div className="ml-auto flex items-center gap-2">
-            <Button variant="outline" size="sm">
+            <Button variant="outline" size="sm" onClick={() => handleToast('Export')}>
                 <Download className="mr-2 h-4 w-4" />
                 Export
             </Button>
-            <Button variant="destructive" size="sm">
+            <Button variant="destructive" size="sm" onClick={() => handleToast('Delete History')}>
                 <Trash2 className="mr-2 h-4 w-4" />
                 Delete History
             </Button>
@@ -76,7 +83,7 @@ export default function OrderDetailPage() {
                         <TableRow><TableCell className="font-semibold">Content Link</TableCell><TableCell><a href={order.link} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">{order.link}</a></TableCell></TableRow>
                         <TableRow><TableCell className="font-semibold">Quantity</TableCell><TableCell>{order.quantity.toLocaleString()}</TableCell></TableRow>
                         <TableRow><TableCell className="font-semibold">Price</TableCell><TableCell>₹{order.price.toFixed(2)}</TableCell></TableRow>
-                         <TableRow><TableCell className="font-semibold">Status</TableCell><TableCell>{order.status}</TableCell></TableRow>
+                         <TableRow><TableCell className="font-semibold">Status</TableCell><TableCell><Badge variant={order.status === 'Pending' ? 'outline' : 'default'}>{order.status}</Badge></TableCell></TableRow>
                     </TableBody>
                 </Table>
             </CardContent>

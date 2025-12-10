@@ -17,8 +17,9 @@ const users = [
 ];
 
 const orders = [
+  { id: 'ORD002', user: 'Jane Smith', service: 'Likes', quantity: 500, price: 50.00, status: 'Completed' },
   { id: 'ORD001', user: 'John Doe', service: 'Followers', quantity: 100, price: 10.00, status: 'Pending' },
-  { id: 'ORD002', user: 'Jane Smith', service: 'Likes', quantity: 500, price: 50.00, status: 'Pending' },
+  { id: 'ORD003', user: 'Jake Paul', service: 'Views', quantity: 10000, price: 25.00, status: 'Pending' },
 ];
 
 const wallets = [
@@ -27,22 +28,31 @@ const wallets = [
 ];
 
 const fundRequests = [
+    { id: 'FUND002', user: 'Jane Smith', amount: 200, date: '2024-07-30', status: 'Approved' },
     { id: 'FUND001', user: 'John Doe', amount: 500, date: '2024-07-30', status: 'Pending' },
-    { id: 'FUND002', user: 'Jane Smith', amount: 200, date: '2024-07-30', status: 'Pending' },
 ]
 
 type AdminView = 'users' | 'orders' | 'wallets' | 'fund-requests';
 
+const sortPendingFirst = (a: {status: string}, b: {status: string}) => {
+    if (a.status === 'Pending' && b.status !== 'Pending') return -1;
+    if (a.status !== 'Pending' && b.status === 'Pending') return 1;
+    return 0;
+};
+
+const sortedOrders = [...orders].sort(sortPendingFirst);
+const sortedFundRequests = [...fundRequests].sort(sortPendingFirst);
+
 const viewConfig = {
     users: { title: 'Users', icon: Users, description: 'Manage all users', data: users, count: users.length },
-    orders: { title: 'Orders', icon: ShoppingCart, description: 'Review new orders', data: orders, count: orders.length },
+    orders: { title: 'Orders', icon: ShoppingCart, description: 'Review new orders', data: sortedOrders, count: orders.filter(o => o.status === 'Pending').length },
     wallets: { title: 'Wallets', icon: Wallet, description: 'View user balances', data: wallets, count: wallets.length },
-    'fund-requests': { title: 'Fund Requests', icon: Banknote, description: 'Approve fund requests', data: fundRequests, count: fundRequests.length },
+    'fund-requests': { title: 'Fund Requests', icon: Banknote, description: 'Approve fund requests', data: sortedFundRequests, count: fundRequests.filter(fr => fr.status === 'Pending').length },
 }
 
 export default function AdminPage() {
   
-  const [currentView, setCurrentView] = useState<AdminView>('users');
+  const [currentView, setCurrentView] = useState<AdminView>('orders');
   const router = useRouter();
 
   const renderContent = () => {
@@ -83,7 +93,7 @@ export default function AdminPage() {
                 <Card className="shadow-xl bg-card border-border/20">
                     <CardHeader>
                         <CardTitle>Order Management</CardTitle>
-                        <CardDescription>Review incoming user orders.</CardDescription>
+                        <CardDescription>Review incoming user orders. Pending orders are shown first.</CardDescription>
                     </CardHeader>
                     <CardContent>
                         <Table>
@@ -98,15 +108,19 @@ export default function AdminPage() {
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {orders.map((order) => (
-                            <TableRow key={order.id} onClick={() => router.push(`/admin/orders/${order.id}`)} className="cursor-pointer">
+                            {viewConfig.orders.data.map((order) => (
+                            <TableRow 
+                                key={order.id} 
+                                onClick={() => router.push(`/admin/orders/${order.id}`)} 
+                                className={`cursor-pointer ${order.status !== 'Pending' ? 'bg-muted/30 text-muted-foreground' : ''}`}
+                            >
                                 <TableCell>{order.id}</TableCell>
                                 <TableCell>{order.user}</TableCell>
                                 <TableCell>{order.service}</TableCell>
                                 <TableCell>{order.quantity}</TableCell>
                                 <TableCell>₹{order.price.toFixed(2)}</TableCell>
                                 <TableCell>
-                                    <Badge variant={order.status === 'Pending' ? 'outline' : 'default'}>{order.status}</Badge>
+                                    <Badge variant={order.status === 'Pending' ? 'outline' : 'secondary'}>{order.status}</Badge>
                                 </TableCell>
                             </TableRow>
                             ))}
@@ -149,7 +163,7 @@ export default function AdminPage() {
                 <Card className="shadow-xl bg-card border-border/20">
                     <CardHeader>
                         <CardTitle>Fund Requests</CardTitle>
-                        <CardDescription>Approve or decline user requests to add funds.</CardDescription>
+                        <CardDescription>Approve or decline user requests to add funds. Pending requests are shown first.</CardDescription>
                     </CardHeader>
                     <CardContent>
                         <Table>
@@ -163,14 +177,18 @@ export default function AdminPage() {
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {fundRequests.map((request) => (
-                                    <TableRow key={request.id} onClick={() => router.push(`/admin/fund-requests/${request.id}`)} className="cursor-pointer">
+                                {viewConfig['fund-requests'].data.map((request) => (
+                                    <TableRow 
+                                        key={request.id} 
+                                        onClick={() => router.push(`/admin/fund-requests/${request.id}`)} 
+                                        className={`cursor-pointer ${request.status !== 'Pending' ? 'bg-muted/30 text-muted-foreground' : ''}`}
+                                    >
                                         <TableCell>{request.id}</TableCell>
                                         <TableCell>{request.user}</TableCell>
                                         <TableCell>₹{request.amount.toFixed(2)}</TableCell>
                                         <TableCell>{request.date}</TableCell>
                                         <TableCell>
-                                            <Badge variant={request.status === 'Pending' ? 'outline' : 'default'}>{request.status}</Badge>
+                                            <Badge variant={request.status === 'Pending' ? 'outline' : 'secondary'}>{request.status}</Badge>
                                         </TableCell>
                                     </TableRow>
                                 ))}
@@ -193,6 +211,9 @@ export default function AdminPage() {
         <div className="grid gap-4 md:grid-cols-2 md:gap-8 lg:grid-cols-4">
             {(Object.keys(viewConfig) as AdminView[]).map((view) => {
                 const Icon = viewConfig[view].icon;
+                const isPendingView = view === 'orders' || view === 'fund-requests';
+                const count = isPendingView ? viewConfig[view].count : viewConfig[view].data.length;
+
                 return (
                     <Card 
                         key={view}
@@ -204,7 +225,10 @@ export default function AdminPage() {
                             <Icon className="h-4 w-4 text-muted-foreground" />
                         </CardHeader>
                         <CardContent>
-                            <div className="text-2xl font-bold">{viewConfig[view].count}</div>
+                            <div className="text-2xl font-bold">
+                                {count}
+                                {isPendingView && <span className="text-sm font-normal text-muted-foreground"> pending</span>}
+                            </div>
                             <p className="text-xs text-muted-foreground">{viewConfig[view].description}</p>
                         </CardContent>
                     </Card>
