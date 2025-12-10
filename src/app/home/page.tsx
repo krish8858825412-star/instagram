@@ -8,7 +8,8 @@ import { Header } from "@/components/header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Separator } from "@/components/ui/separator";
-import { AnimatedBackground } from "@/components/animated-background";
+import { Users, ThumbsUp, MessageSquare, Eye } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 export default function HomePage() {
   const { user, loading } = useAuth();
@@ -28,6 +29,13 @@ export default function HomePage() {
     );
   }
 
+  const features = [
+    { title: "Get Followers", icon: Users },
+    { title: "Get Likes", icon: ThumbsUp },
+    { title: "Get Comments", icon: MessageSquare },
+    { title: "Get Views", icon: Eye },
+  ]
+
   return (
     <div className="flex min-h-screen w-full flex-col">
       <Header />
@@ -38,18 +46,20 @@ export default function HomePage() {
           </h1>
         </div>
         <Separator />
-        <div className="grid gap-4 md:gap-8">
-          <Card className="shadow-xl bg-card/10 backdrop-blur-lg border-border/20 relative overflow-hidden">
-            <AnimatedBackground />
-            <div className="relative z-10">
-              <CardHeader>
-                <CardTitle>Your Dashboard</CardTitle>
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+          {features.map((feature) => (
+            <Card key={feature.title} className="shadow-xl bg-card/10 backdrop-blur-lg border-border/20 hover:border-primary/80 transition-all cursor-pointer">
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <CardTitle className="text-lg font-medium">{feature.title}</CardTitle>
+                <feature.icon className="h-6 w-6 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <p>This is your personal dashboard. More widgets and features coming soon!</p>
+                <Button className="w-full mt-4">
+                  Proceed
+                </Button>
               </CardContent>
-            </div>
-          </Card>
+            </Card>
+          ))}
         </div>
       </main>
     </div>
