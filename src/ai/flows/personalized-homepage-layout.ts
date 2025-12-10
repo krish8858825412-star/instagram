@@ -31,11 +31,7 @@ export async function personalizedHomepageLayout(input: PersonalizedHomepageLayo
   return personalizedHomepageLayoutFlow(input);
 }
 
-const prompt = ai.definePrompt({
-  name: 'personalizedHomepageLayoutPrompt',
-  input: {schema: PersonalizedHomepageLayoutInputSchema},
-  output: {schema: PersonalizedHomepageLayoutOutputSchema},
-  prompt: `You are an expert in user interface design and information architecture. Based on the user information provided, suggest a personalized and informative layout for their home page.
+const promptText = `You are an expert in user interface design and information architecture. Based on the user information provided, suggest a personalized and informative layout for their home page.
 
 User Information: {{{userInfo}}}
 
@@ -47,8 +43,7 @@ Consider the following aspects when generating the layout suggestion:
 
 Provide a detailed description of the layout suggestion, including the sections, content types, and visual elements for the home page.  The layout suggestion should optimize for visual appeal and informative content.
 
-Layout Suggestion:`,
-});
+Layout Suggestion:`;
 
 const personalizedHomepageLayoutFlow = ai.defineFlow(
   {
@@ -57,7 +52,13 @@ const personalizedHomepageLayoutFlow = ai.defineFlow(
     outputSchema: PersonalizedHomepageLayoutOutputSchema,
   },
   async input => {
-    const {output} = await prompt(input);
+    const {output} = await ai.generate({
+      model: 'google/gemini-1.5-flash',
+      prompt: promptText.replace('{{{userInfo}}}', input.userInfo),
+      output: {
+        schema: PersonalizedHomepageLayoutOutputSchema,
+      },
+    });
     return output!;
   }
 );
