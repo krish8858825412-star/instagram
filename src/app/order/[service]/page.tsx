@@ -15,8 +15,7 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ArrowLeft, CheckCircle, Link as LinkIcon, Loader2, Wallet } from "lucide-react";
-import Image from 'next/image';
+import { ArrowLeft, CheckCircle, ClipboardPaste, Loader2, Wallet } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { OrderPlacedDialog } from "@/components/order-placed-dialog";
 import { useGlobalState } from "@/contexts/state-context";
@@ -26,7 +25,7 @@ import { SplashScreen } from "@/components/splash-screen";
 const serviceDetails: { [key: string]: { title: string; unit: string; step: number } } = {
   followers: { title: "Followers", unit: "followers", step: 10 },
   likes: { title: "Likes", unit: "likes", step: 100 },
-  comments: { title: "Comments", unit: "comments", step: 5 },
+  comments: { title: "Comments", unit: "comments", step: 10 },
   views: { title: "Views", unit: "views", step: 1000 },
 };
 
@@ -45,8 +44,6 @@ export default function ServiceOrderPage() {
   const [quantity, setQuantity] = useState(details.step);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuccessDialog, setShowSuccessDialog] = useState(false);
-  const [isPreviewing, setIsPreviewing] = useState(false);
-  const [previewUrl, setPreviewUrl] = useState('');
 
   useEffect(() => {
     if (!loading && !user) {
@@ -59,32 +56,33 @@ export default function ServiceOrderPage() {
 
   const handleLinkChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setLink(e.target.value);
-    if(previewUrl) setPreviewUrl(''); // Reset preview if link changes
   }
-
-  const handlePreview = () => {
-    if(!link.startsWith('http')) {
+  
+  const handlePaste = async () => {
+    try {
+        const text = await navigator.clipboard.readText();
+        setLink(text);
+        toast({
+            title: 'Pasted!',
+            description: 'Link pasted from clipboard.'
+        })
+    } catch(err) {
         toast({
             variant: 'destructive',
-            title: 'Invalid Link',
-            description: 'Please enter a valid URL starting with http or https.',
-        });
-        return;
+            title: 'Failed to paste',
+            description: 'Could not read from clipboard. Please check your browser permissions.'
+        })
     }
-    setIsPreviewing(true);
-    setTimeout(() => {
-        setPreviewUrl('https://picsum.photos/seed/instapreview/600/400');
-        setIsPreviewing(false);
-    }, 1500);
   }
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!previewUrl) {
+    if (!link) {
       toast({
         variant: "destructive",
-        title: "No Preview",
-        description: "Please generate a preview before placing an order.",
+        title: "No Link Provided",
+        description: "Please enter a link to your content.",
       });
       return;
     }
@@ -159,22 +157,12 @@ export default function ServiceOrderPage() {
                         required
                         className="flex-grow"
                       />
-                      <Button type="button" onClick={handlePreview} disabled={isPreviewing || !link}>
-                        {isPreviewing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <LinkIcon className="mr-2 h-4 w-4" />}
-                        Generate Preview
+                      <Button type="button" onClick={handlePaste}>
+                        <ClipboardPaste className="mr-2 h-4 w-4" />
+                        Paste
                       </Button>
                     </div>
                   </div>
-
-                  {previewUrl && (
-                    <div className="space-y-2 animation-focus-in">
-                        <Label>Content Preview</Label>
-                        <div className="rounded-lg overflow-hidden border border-border/20 aspect-video relative bg-muted flex items-center justify-center">
-                            <Image src={previewUrl} alt="Content Preview" layout="fill" objectFit="cover" data-ai-hint="social media post" />
-                            <p className="z-10 text-white bg-black/50 p-2 rounded-md">Live preview is for demonstration</p>
-                        </div>
-                    </div>
-                  )}
 
                   <div className="space-y-2">
                     <Label htmlFor="quantity">Quantity</Label>
@@ -188,7 +176,7 @@ export default function ServiceOrderPage() {
                       required
                     />
                     <p className="text-xs text-muted-foreground">
-                        Minimum order is {details.step} {details.unit}.
+                        Minimum order is {details.step} {details.unit} (for ₹{((details.step / 10) * PRICE_PER_10_UNITS).toFixed(2)}).
                     </p>
                   </div>
                    <Card className="bg-muted/50 border-dashed">
@@ -208,7 +196,7 @@ export default function ServiceOrderPage() {
                       ₹{price.toFixed(2)}
                     </span>
                   </div>
-                  <Button type="submit" size="lg" className="w-full sm:w-auto" disabled={isSubmitting || !previewUrl || !hasSufficientFunds}>
+                  <Button type="submit" size="lg" className="w-full sm:w-auto" disabled={isSubmitting || !link || !hasSufficientFunds}>
                     {isSubmitting ? (
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     ) : (
