@@ -63,7 +63,7 @@ export default function HomePage() {
         </div>
         <Separator />
         <div className="grid gap-4 md:gap-8">
-          <Card className="shadow-md bg-card/50 backdrop-blur-lg border-border/20">
+          <Card className="shadow-xl bg-transparent backdrop-blur-lg border-border/20">
             <CardHeader>
               <CardTitle>Your Personalized Dashboard</CardTitle>
             </CardHeader>
