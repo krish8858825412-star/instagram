@@ -8,6 +8,7 @@ import { Table, TableBody, TableCell, TableRow } from '@/components/ui/table';
 import { ArrowLeft, Check, X, Download, Trash2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Separator } from '@/components/ui/separator';
+import { Badge } from '@/components/ui/badge';
 
 // Mock data - in a real app, you'd fetch this based on the ID
 const mockOrder = {
