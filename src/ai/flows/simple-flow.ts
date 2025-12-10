@@ -10,6 +10,7 @@
 
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
+import {googleAI} from '@genkit-ai/google-genai';
 
 const SimpleFlowInputSchema = z.object({
   question: z.string().describe('The question to ask the AI.'),
@@ -24,8 +25,7 @@ export type SimpleFlowOutput = z.infer<typeof SimpleFlowOutputSchema>;
 export async function simpleFlow(
   input: SimpleFlowInput
 ): Promise<SimpleFlowOutput> {
-  const {answer} = await simpleFlowFlow(input);
-  return {answer};
+  return await simpleFlowFlow(input);
 }
 
 const prompt = ai.definePrompt({
@@ -43,7 +43,14 @@ const simpleFlowFlow = ai.defineFlow(
     outputSchema: SimpleFlowOutputSchema,
   },
   async input => {
-    const {output} = await prompt(input);
-    return {answer: output!.answer};
+    const {output} = await ai.generate({
+      model: googleAI.model('gemini-1.5-flash-latest'),
+      prompt: prompt.compile({input}),
+      output: {
+        schema: SimpleFlowOutputSchema,
+      },
+    });
+
+    return output!;
   }
 );
