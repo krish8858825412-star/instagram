@@ -7,8 +7,11 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Users, ShoppingCart, Wallet, Banknote } from 'lucide-react';
-
+import { Users, ShoppingCart, Wallet, Banknote, History, MessageSquare } from 'lucide-react';
+import { Textarea } from '@/components/ui/textarea';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { useToast } from '@/hooks/use-toast';
 
 // Mock data
 const users = [
@@ -32,7 +35,13 @@ const fundRequests = [
     { id: 'FUND001', user: 'John Doe', amount: 500, date: '2024-07-30', status: 'Pending' },
 ]
 
-type AdminView = 'users' | 'orders' | 'wallets' | 'fund-requests';
+const history = [
+    { id: 1, action: 'Approved Fund Request', target: 'FUND002', user: 'Admin', date: '2024-07-31 10:00 AM' },
+    { id: 2, action: 'Completed Order', target: 'ORD002', user: 'Admin', date: '2024-07-31 09:45 AM' },
+    { id: 3, action: 'User Registered', target: 'USR002', user: 'System', date: '2024-07-29 08:00 AM' },
+];
+
+type AdminView = 'users' | 'orders' | 'wallets' | 'fund-requests' | 'all-history' | 'inbox';
 
 const sortPendingFirst = (a: {status: string}, b: {status: string}) => {
     if (a.status === 'Pending' && b.status !== 'Pending') return -1;
@@ -48,12 +57,25 @@ const viewConfig = {
     orders: { title: 'Orders', icon: ShoppingCart, description: 'Review new orders', data: sortedOrders, count: orders.filter(o => o.status === 'Pending').length },
     wallets: { title: 'Wallets', icon: Wallet, description: 'View user balances', data: wallets, count: wallets.length },
     'fund-requests': { title: 'Fund Requests', icon: Banknote, description: 'Approve fund requests', data: sortedFundRequests, count: fundRequests.filter(fr => fr.status === 'Pending').length },
+    'all-history': { title: 'All History', icon: History, description: 'View all admin and system actions', data: history, count: history.length },
+    inbox: { title: 'Inbox', icon: MessageSquare, description: 'Send messages to users', data: [], count: 0 },
 }
 
 export default function AdminPage() {
   
   const [currentView, setCurrentView] = useState<AdminView>('orders');
   const router = useRouter();
+  const { toast } = useToast();
+
+  const handleMessageSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    toast({
+      title: 'Message Sent!',
+      description: 'Your message has been sent to all users.',
+    });
+    const form = e.target as HTMLFormElement;
+    form.reset();
+  };
 
   const renderContent = () => {
     switch(currentView) {
@@ -197,6 +219,59 @@ export default function AdminPage() {
                     </CardContent>
                 </Card>
             );
+        case 'all-history':
+            return (
+                <Card className="shadow-xl bg-card border-border/20">
+                    <CardHeader>
+                        <CardTitle>Action History</CardTitle>
+                        <CardDescription>A log of all important actions taken in the system.</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead>Action</TableHead>
+                                <TableHead>Target ID</TableHead>
+                                <TableHead>Performed By</TableHead>
+                                <TableHead>Date</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {history.map((item) => (
+                                <TableRow key={item.id} className="bg-muted/30 text-muted-foreground">
+                                    <TableCell>{item.action}</TableCell>
+                                    <TableCell>{item.target}</TableCell>
+                                    <TableCell>{item.user}</TableCell>
+                                    <TableCell>{item.date}</TableCell>
+                                </TableRow>
+                            ))}
+                        </TableBody>
+                        </Table>
+                    </CardContent>
+                </Card>
+            );
+        case 'inbox':
+             return (
+                <Card className="shadow-xl bg-card border-border/20">
+                    <CardHeader>
+                        <CardTitle>Send a Message</CardTitle>
+                        <CardDescription>Compose a message to be sent to all users' inboxes.</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <form onSubmit={handleMessageSubmit} className="space-y-4">
+                            <div className="space-y-2">
+                                <Label htmlFor="subject">Subject</Label>
+                                <Input id="subject" placeholder="Message Subject" required />
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="message">Message</Label>
+                                <Textarea id="message" placeholder="Type your message here..." required rows={6} />
+                            </div>
+                            <Button type="submit">Send Message to All Users</Button>
+                        </form>
+                    </CardContent>
+                </Card>
+            );
         default:
             return null;
     }
@@ -208,7 +283,7 @@ export default function AdminPage() {
         <h1 className="text-xl font-bold">Admin Panel</h1>
       </header>
       <main className="flex flex-1 flex-col gap-4 p-4 md:gap-8 md:p-8">
-        <div className="grid gap-4 md:grid-cols-2 md:gap-8 lg:grid-cols-4">
+        <div className="grid gap-4 md:grid-cols-2 md:gap-8 lg:grid-cols-3 xl:grid-cols-6">
             {(Object.keys(viewConfig) as AdminView[]).map((view) => {
                 const Icon = viewConfig[view].icon;
                 const isPendingView = view === 'orders' || view === 'fund-requests';

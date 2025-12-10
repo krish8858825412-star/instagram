@@ -5,7 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableRow } from '@/components/ui/table';
-import { ArrowLeft, Check, X, Download, Trash2 } from 'lucide-react';
+import { ArrowLeft, Check, X } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
@@ -40,13 +40,6 @@ export default function OrderDetailPage() {
     router.push('/admin');
   };
   
-  const handleToast = (feature: string) => {
-    toast({
-        title: 'Feature not implemented',
-        description: `The ${feature} functionality requires a backend and is not yet available.`,
-    });
-  }
-
   return (
     <div className="flex min-h-screen w-full flex-col bg-muted/40">
        <header className="sticky top-0 z-30 flex h-16 items-center gap-4 border-b border-border/20 bg-background/50 px-4 backdrop-blur-lg md:px-6">
@@ -55,16 +48,6 @@ export default function OrderDetailPage() {
             <span className="sr-only">Back</span>
         </Button>
         <h1 className="text-xl font-bold">Order Details</h1>
-        <div className="ml-auto flex items-center gap-2">
-            <Button variant="outline" size="sm" onClick={() => handleToast('Export')}>
-                <Download className="mr-2 h-4 w-4" />
-                Export
-            </Button>
-            <Button variant="destructive" size="sm" onClick={() => handleToast('Delete History')}>
-                <Trash2 className="mr-2 h-4 w-4" />
-                Delete History
-            </Button>
-        </div>
       </header>
       <main className="flex flex-1 flex-col items-center gap-4 p-4 md:gap-8 md:p-8">
         <div className="w-full max-w-4xl">
