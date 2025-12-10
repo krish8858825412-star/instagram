@@ -53,9 +53,12 @@ const passwordResetSchema = z.object({
   email: z.string().email({ message: "Invalid email address." }),
 });
 
+const ADMIN_SECRET_CODE = "99241%@8#₹₹1625";
+
 export default function AuthPage() {
   const [isSigningUp, setIsSigningUp] = useState(false);
   const [isResettingPassword, setIsResettingPassword] = useState(false);
+  const [isAdminMode, setIsAdminMode] = useState(false);
   const {
     user,
     loading: authLoading,
@@ -88,6 +91,16 @@ export default function AuthPage() {
       email: "",
     },
   });
+
+  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.value === ADMIN_SECRET_CODE) {
+      setIsAdminMode(true);
+    } else {
+      if (isAdminMode) {
+        setIsAdminMode(false);
+      }
+    }
+  };
 
   const onSubmit = async (values: z.infer<typeof signUpSchema | typeof signInSchema>) => {
     setIsSubmitting(true);
@@ -154,6 +167,7 @@ export default function AuthPage() {
   
   const toggleForm = () => {
     setIsSigningUp(!isSigningUp);
+    setIsAdminMode(false);
     form.reset();
   }
 
@@ -173,97 +187,116 @@ export default function AuthPage() {
         <Card className="w-full max-w-md bg-transparent backdrop-blur-lg border-border/20 shadow-xl">
           <CardHeader className="text-center">
             <CardTitle className="text-2xl font-bold tracking-tight">
-              {isSigningUp ? "Create an Account" : "Welcome Back"}
+              {isAdminMode ? "Admin Access" : isSigningUp ? "Create an Account" : "Welcome Back"}
             </CardTitle>
             <CardDescription>
-              {isSigningUp
+              {isAdminMode
+                ? "Enter the admin panel."
+                : isSigningUp
                 ? "Enter your details below to create your account."
                 : "Sign in to continue. If you don't have an account, you need to sign up first."}
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                {isSigningUp && (
-                  <div className="relative">
-                    <UserIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-                    <FormField
-                      control={form.control}
-                      name="name"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormControl>
-                            <Input placeholder="Full Name" {...field} className="pl-10" />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                )}
-                <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-                  <FormField
-                    control={form.control}
-                    name="email"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormControl>
-                          <Input placeholder="name@example.com" {...field} className="pl-10" />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-
-                <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-                  <FormField
-                    control={form.control}
-                    name="password"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormControl>
-                          <Input type="password" placeholder="••••••••" {...field} className="pl-10" />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-
-                {!isSigningUp && (
-                   <div className="flex justify-end">
-                      <Button
-                        type="button"
-                        variant="link"
-                        size="sm"
-                        className="h-auto p-0 text-primary"
-                        onClick={() => setIsResettingPassword(true)}
-                      >
-                        Forgot Password?
-                      </Button>
-                    </div>
-                )}
-
-                <Button type="submit" className="w-full" disabled={isSubmitting}>
-                  {isSubmitting && (
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  )}
-                  {isSigningUp ? "Sign Up" : "Sign In"}
-                </Button>
-              </form>
-            </Form>
-
-            <p className="mt-6 text-center text-sm text-muted-foreground">
-              {isSigningUp
-                ? "Already have an account?"
-                : "Don't have an account?"}
-              <Button variant="link" onClick={toggleForm} className="font-semibold text-primary">
-                {isSigningUp ? "Sign In" : "Sign Up"}
+            {isAdminMode ? (
+              <Button className="w-full" onClick={() => router.push('/admin')}>
+                Enter Admin Panel
               </Button>
-            </p>
+            ) : (
+              <>
+                <Form {...form}>
+                  <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                    {isSigningUp && (
+                      <div className="relative">
+                        <UserIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                        <FormField
+                          control={form.control}
+                          name="name"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormControl>
+                                <Input placeholder="Full Name" {...field} className="pl-10" />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                    )}
+                    <div className="relative">
+                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                      <FormField
+                        control={form.control}
+                        name="email"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormControl>
+                              <Input placeholder="name@example.com" {...field} className="pl-10" />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+
+                    <div className="relative">
+                      <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                      <FormField
+                        control={form.control}
+                        name="password"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormControl>
+                              <Input
+                                type="password"
+                                placeholder="••••••••"
+                                {...field}
+                                onChange={(e) => {
+                                  field.onChange(e);
+                                  handlePasswordChange(e);
+                                }}
+                                className="pl-10"
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+
+                    {!isSigningUp && (
+                      <div className="flex justify-end">
+                          <Button
+                            type="button"
+                            variant="link"
+                            size="sm"
+                            className="h-auto p-0 text-primary"
+                            onClick={() => setIsResettingPassword(true)}
+                          >
+                            Forgot Password?
+                          </Button>
+                        </div>
+                    )}
+
+                    <Button type="submit" className="w-full" disabled={isSubmitting}>
+                      {isSubmitting && (
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      )}
+                      {isSigningUp ? "Sign Up" : "Sign In"}
+                    </Button>
+                  </form>
+                </Form>
+
+                <p className="mt-6 text-center text-sm text-muted-foreground">
+                  {isSigningUp
+                    ? "Already have an account?"
+                    : "Don't have an account?"}
+                  <Button variant="link" onClick={toggleForm} className="font-semibold text-primary">
+                    {isSigningUp ? "Sign In" : "Sign Up"}
+                  </Button>
+                </p>
+              </>
+            )}
           </CardContent>
         </Card>
       </main>
