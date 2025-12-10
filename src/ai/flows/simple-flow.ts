@@ -45,7 +45,8 @@ const simpleFlowFlow = ai.defineFlow(
   async input => {
     const {output} = await ai.generate({
       model: googleAI.model('gemini-1.5-flash-latest'),
-      prompt: prompt.compile({input}),
+      prompt: prompt,
+      input: input,
       output: {
         schema: SimpleFlowOutputSchema,
       },
