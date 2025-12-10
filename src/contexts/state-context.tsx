@@ -163,6 +163,13 @@ export const GlobalStateProvider = ({ children }: { children: ReactNode }) => {
   }, [authUser]);
 
   const addOrder = (order: Order) => {
+    // Deduct price from wallet immediately on order creation
+    const userToUpdate = users.find(u => u.name === order.user);
+    if(userToUpdate) {
+        setWallets(prevWallets => prevWallets.map(w => 
+            w.userId === userToUpdate.id ? { ...w, balance: w.balance - order.price } : w
+        ));
+    }
     setOrders(prev => [...prev, order]);
   };
 
@@ -172,16 +179,15 @@ export const GlobalStateProvider = ({ children }: { children: ReactNode }) => {
         order.id === orderId ? { ...order, ...updates } : order
       );
 
-      // Find the specific order that was just updated
       const updatedOrder = newOrders.find(o => o.id === orderId);
       const originalOrder = prevOrders.find(o => o.id === orderId);
 
-      // If the order was just completed, deduct from the wallet
-      if (updatedOrder && updates.status === 'Completed' && originalOrder?.status !== 'Completed') {
+      // If the order was just declined, refund the user
+      if (updatedOrder && updates.status === 'Declined' && originalOrder?.status !== 'Declined') {
         const userToUpdate = users.find(u => u.name === updatedOrder.user);
         if (userToUpdate) {
           setWallets(prevWallets => prevWallets.map(w =>
-            w.userId === userToUpdate.id ? { ...w, balance: w.balance - updatedOrder.price } : w
+            w.userId === userToUpdate.id ? { ...w, balance: w.balance + updatedOrder.price } : w
           ));
         }
       }
@@ -195,24 +201,30 @@ export const GlobalStateProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const updateFundRequest = (requestId: string, updates: Partial<FundRequest>, approvedAmount?: number) => {
-      setFundRequests(prev => prev.map(req => {
-          if (req.id === requestId) {
-              const updatedReq = { ...req, ...updates };
-              
-              if (updates.status === 'Approved' && req.status !== 'Approved') {
-                  const amountToAdd = approvedAmount !== undefined ? approvedAmount : updatedReq.amount;
-                  const targetUser = users.find(u => u.name === updatedReq.user);
-                  
-                  if(targetUser && amountToAdd > 0) {
-                      setWallets(prevWallets => prevWallets.map(w => 
-                          w.userId === targetUser.id ? { ...w, balance: w.balance + amountToAdd } : w
-                      ));
-                  }
-              }
-              return updatedReq;
-          }
-          return req;
-      }));
+      setFundRequests(prev => {
+        const originalRequest = prev.find(req => req.id === requestId);
+        if (!originalRequest) return prev;
+
+        // Apply updates to create the new state for the request
+        const updatedRequest = { ...originalRequest, ...updates };
+
+        // Only process wallet change if status is changing to "Approved"
+        if (updates.status === 'Approved' && originalRequest.status !== 'Approved') {
+            const amountToAdd = approvedAmount !== undefined ? approvedAmount : updatedRequest.amount;
+            const targetUser = users.find(u => u.name === updatedRequest.user);
+            
+            if (targetUser && amountToAdd > 0) {
+                setWallets(prevWallets => 
+                    prevWallets.map(w => 
+                        w.userId === targetUser.id ? { ...w, balance: w.balance + amountToAdd } : w
+                    )
+                );
+            }
+        }
+        
+        // Return the updated list of requests
+        return prev.map(req => req.id === requestId ? updatedRequest : req);
+      });
   }
 
   const addHistoryItem = (item: HistoryItem) => {
@@ -285,3 +297,5 @@ export const useGlobalState = () => {
   }
   return context;
 };
+
+    
