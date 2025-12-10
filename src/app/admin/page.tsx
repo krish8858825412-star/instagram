@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -6,13 +7,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-  } from "@/components/ui/select"
+import { Users, ShoppingCart, Wallet, Banknote } from 'lucide-react';
+
 
 // Mock data
 const users = [
@@ -37,6 +33,13 @@ const fundRequests = [
 
 type AdminView = 'users' | 'orders' | 'wallets' | 'fund-requests';
 
+const viewConfig = {
+    users: { title: 'Users', icon: Users, description: 'Manage all users', data: users, count: users.length },
+    orders: { title: 'Orders', icon: ShoppingCart, description: 'Review new orders', data: orders, count: orders.length },
+    wallets: { title: 'Wallets', icon: Wallet, description: 'View user balances', data: wallets, count: wallets.length },
+    'fund-requests': { title: 'Fund Requests', icon: Banknote, description: 'Approve fund requests', data: fundRequests, count: fundRequests.length },
+}
+
 export default function AdminPage() {
   
   const [currentView, setCurrentView] = useState<AdminView>('users');
@@ -46,7 +49,7 @@ export default function AdminPage() {
     switch(currentView) {
         case 'users':
             return (
-                <Card className="shadow-xl bg-transparent backdrop-blur-lg border-border/20">
+                <Card className="shadow-xl bg-card border-border/20">
                     <CardHeader>
                         <CardTitle>User List</CardTitle>
                         <CardDescription>Manage all registered users.</CardDescription>
@@ -77,7 +80,7 @@ export default function AdminPage() {
             );
         case 'orders':
             return (
-                <Card className="shadow-xl bg-transparent backdrop-blur-lg border-border/20">
+                <Card className="shadow-xl bg-card border-border/20">
                     <CardHeader>
                         <CardTitle>Order Management</CardTitle>
                         <CardDescription>Review incoming user orders.</CardDescription>
@@ -103,7 +106,7 @@ export default function AdminPage() {
                                 <TableCell>{order.quantity}</TableCell>
                                 <TableCell>₹{order.price.toFixed(2)}</TableCell>
                                 <TableCell>
-                                    <Badge variant="outline">{order.status}</Badge>
+                                    <Badge variant={order.status === 'Pending' ? 'outline' : 'default'}>{order.status}</Badge>
                                 </TableCell>
                             </TableRow>
                             ))}
@@ -114,7 +117,7 @@ export default function AdminPage() {
             );
         case 'wallets':
             return (
-                <Card className="shadow-xl bg-transparent backdrop-blur-lg border-border/20">
+                <Card className="shadow-xl bg-card border-border/20">
                     <CardHeader>
                         <CardTitle>User Wallets</CardTitle>
                         <CardDescription>View the current balance of all users.</CardDescription>
@@ -143,7 +146,7 @@ export default function AdminPage() {
             );
         case 'fund-requests':
             return (
-                <Card className="shadow-xl bg-transparent backdrop-blur-lg border-border/20">
+                <Card className="shadow-xl bg-card border-border/20">
                     <CardHeader>
                         <CardTitle>Fund Requests</CardTitle>
                         <CardDescription>Approve or decline user requests to add funds.</CardDescription>
@@ -167,7 +170,7 @@ export default function AdminPage() {
                                         <TableCell>₹{request.amount.toFixed(2)}</TableCell>
                                         <TableCell>{request.date}</TableCell>
                                         <TableCell>
-                                            <Badge variant="outline">{request.status}</Badge>
+                                            <Badge variant={request.status === 'Pending' ? 'outline' : 'default'}>{request.status}</Badge>
                                         </TableCell>
                                     </TableRow>
                                 ))}
@@ -182,25 +185,35 @@ export default function AdminPage() {
   }
 
   return (
-    <div className="flex min-h-screen w-full flex-col">
+    <div className="flex min-h-screen w-full flex-col bg-muted/40">
       <header className="sticky top-0 z-30 flex h-16 items-center gap-4 border-b border-border/20 bg-background/50 px-4 backdrop-blur-lg md:px-6">
         <h1 className="text-xl font-bold">Admin Panel</h1>
-        <div className="ml-auto">
-            <Select value={currentView} onValueChange={(value) => setCurrentView(value as AdminView)}>
-                <SelectTrigger className="w-[180px]">
-                    <SelectValue placeholder="Select a view" />
-                </SelectTrigger>
-                <SelectContent>
-                    <SelectItem value="users">Users</SelectItem>
-                    <SelectItem value="orders">Orders</SelectItem>
-                    <SelectItem value="wallets">Wallets</SelectItem>
-                    <SelectItem value="fund-requests">Fund Requests</SelectItem>
-                </SelectContent>
-            </Select>
-        </div>
       </header>
       <main className="flex flex-1 flex-col gap-4 p-4 md:gap-8 md:p-8">
-        {renderContent()}
+        <div className="grid gap-4 md:grid-cols-2 md:gap-8 lg:grid-cols-4">
+            {(Object.keys(viewConfig) as AdminView[]).map((view) => {
+                const Icon = viewConfig[view].icon;
+                return (
+                    <Card 
+                        key={view}
+                        className={`shadow-lg bg-card/60 backdrop-blur-lg border-border/20 cursor-pointer transition-all hover:border-primary ${currentView === view ? 'border-primary' : ''}`}
+                        onClick={() => setCurrentView(view)}
+                    >
+                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                            <CardTitle className="text-sm font-medium">{viewConfig[view].title}</CardTitle>
+                            <Icon className="h-4 w-4 text-muted-foreground" />
+                        </CardHeader>
+                        <CardContent>
+                            <div className="text-2xl font-bold">{viewConfig[view].count}</div>
+                            <p className="text-xs text-muted-foreground">{viewConfig[view].description}</p>
+                        </CardContent>
+                    </Card>
+                )
+            })}
+        </div>
+        <div className="animation-focus-in">
+            {renderContent()}
+        </div>
       </main>
     </div>
   );
