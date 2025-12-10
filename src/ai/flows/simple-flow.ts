@@ -8,12 +8,13 @@
  * - SimpleFlowOutput - The return type for the simpleFlow function.
  */
 
-import {ai} from '@/ai/genkit';
+import { ai } from '@/ai/genkit';
 import {z} from 'genkit';
-import {googleAI} from '@genkit-ai/google-genai';
+import {googleAI as googleAIPlugin} from '@genkit-ai/google-genai';
 
 const SimpleFlowInputSchema = z.object({
   question: z.string().describe('The question to ask the AI.'),
+  apiKey: z.string().describe('The Gemini API key.'),
 });
 export type SimpleFlowInput = z.infer<typeof SimpleFlowInputSchema>;
 
@@ -43,10 +44,25 @@ const simpleFlowFlow = ai.defineFlow(
     outputSchema: SimpleFlowOutputSchema,
   },
   async input => {
-    const {output} = await ai.generate({
-      model: googleAI.model('gemini-1.5-flash-latest'),
-      prompt: prompt,
-      input: input,
+    // Create a temporary Genkit instance with the user's API key.
+    // This isn't ideal, but it's a simple way to handle per-request keys.
+    const tempAi = {
+       ...ai,
+       generate: (options: any) => {
+           const googleAI = googleAIPlugin({apiKey: input.apiKey});
+           const dynamicAi = {
+            plugins: [googleAI],
+            logLevel: 'debug',
+            enableTracingAndMetrics: true,
+           };
+           return ai.generate({ ...options, ...dynamicAi });
+       }
+    };
+    
+    const {output} = await tempAi.generate({
+      model: 'gemini-1.5-flash-latest',
+      prompt: `You are a helpful AI assistant. Answer the following question:
+      Question: ${input.question}`,
       output: {
         schema: SimpleFlowOutputSchema,
       },

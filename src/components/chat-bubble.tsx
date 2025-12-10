@@ -1,7 +1,7 @@
 'use client';
 
 import {useState, useRef, useEffect} from 'react';
-import {Bot, Send, X, Loader2} from 'lucide-react';
+import {Bot, Send, X, Loader2, Settings} from 'lucide-react';
 import {Button} from '@/components/ui/button';
 import {
   Card,
@@ -13,6 +13,7 @@ import {
 import {Input} from '@/components/ui/input';
 import {ScrollArea} from '@/components/ui/scroll-area';
 import {simpleFlow} from '@/ai/flows/simple-flow';
+import { ApiKeyDialog } from './api-key-dialog';
 
 type Message = {
   text: string;
@@ -25,6 +26,15 @@ export function ChatBubble() {
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
+  const [apiKey, setApiKey] = useState<string | null>(null);
+  const [showApiDialog, setShowApiDialog] = useState(false);
+
+  useEffect(() => {
+    const storedApiKey = localStorage.getItem('gemini-api-key');
+    if (storedApiKey) {
+      setApiKey(storedApiKey);
+    }
+  }, []);
 
   const toggleChat = () => {
     setIsOpen(!isOpen);
@@ -40,6 +50,15 @@ export function ChatBubble() {
 
   const handleSendMessage = async () => {
     if (input.trim() === '') return;
+    if (!apiKey) {
+      toast({
+        variant: 'destructive',
+        title: 'API Key Missing',
+        description: 'Please set your Gemini API key in the settings.',
+      });
+      setShowApiDialog(true);
+      return;
+    }
 
     const userMessage: Message = {text: input, isUser: true};
     setMessages(prev => [...prev, userMessage]);
@@ -47,7 +66,7 @@ export function ChatBubble() {
     setIsLoading(true);
 
     try {
-      const response = await simpleFlow({question: input});
+      const response = await simpleFlow({question: input, apiKey});
       const aiMessage: Message = {text: response.answer, isUser: false};
       setMessages(prev => [...prev, aiMessage]);
     } catch (error) {
@@ -71,6 +90,11 @@ export function ChatBubble() {
     }
   }, [messages]);
 
+  const handleApiKeySave = (newApiKey: string) => {
+    setApiKey(newApiKey);
+    localStorage.setItem('gemini-api-key', newApiKey);
+  };
+
   return (
     <>
       <div className="fixed bottom-4 right-4 z-50">
@@ -87,6 +111,9 @@ export function ChatBubble() {
         <Card className="fixed bottom-24 right-4 z-50 w-80 h-96 flex flex-col shadow-2xl rounded-2xl bg-card/60 backdrop-blur-xl">
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle className="text-lg font-bold">AI Assistant</CardTitle>
+            <Button variant="ghost" size="icon" onClick={() => setShowApiDialog(true)}>
+              <Settings className="h-5 w-5" />
+            </Button>
           </CardHeader>
           <CardContent className="flex-1 p-0">
             <ScrollArea className="h-full" ref={scrollAreaRef}>
@@ -140,6 +167,7 @@ export function ChatBubble() {
           </CardFooter>
         </Card>
       )}
+       <ApiKeyDialog open={showApiDialog} onOpenChange={setShowApiDialog} onSave={handleApiKeySave} currentKey={apiKey}/>
     </>
   );
 }
