@@ -75,16 +75,44 @@ interface GlobalState {
 // Create the context
 const GlobalStateContext = createContext<GlobalState | undefined>(undefined);
 
+const useLocalStorage = <T,>(key: string, initialValue: T): [T, React.Dispatch<React.SetStateAction<T>>] => {
+  const [storedValue, setStoredValue] = useState<T>(() => {
+    if (typeof window === 'undefined') {
+      return initialValue;
+    }
+    try {
+      const item = window.localStorage.getItem(key);
+      return item ? JSON.parse(item) : initialValue;
+    } catch (error) {
+      console.error(error);
+      return initialValue;
+    }
+  });
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        window.localStorage.setItem(key, JSON.stringify(storedValue));
+      } catch (error) {
+        console.error(error);
+      }
+    }
+  }, [key, storedValue]);
+
+  return [storedValue, setStoredValue];
+};
+
+
 // Create a provider component
 export const GlobalStateProvider = ({ children }: { children: ReactNode }) => {
   const { user: authUser } = useAuth();
 
-  const [users, setUsers] = useState<User[]>([]);
-  const [orders, setOrders] = useState<Order[]>([]);
-  const [wallets, setWallets] = useState<Wallet[]>([]);
-  const [fundRequests, setFundRequests] = useState<FundRequest[]>([]);
-  const [history, setHistory] = useState<HistoryItem[]>([]);
-  const [messages, setMessages] = useState<Message[]>([]);
+  const [users, setUsers] = useLocalStorage<User[]>('app_users', []);
+  const [orders, setOrders] = useLocalStorage<Order[]>('app_orders', []);
+  const [wallets, setWallets] = useLocalStorage<Wallet[]>('app_wallets', []);
+  const [fundRequests, setFundRequests] = useLocalStorage<FundRequest[]>('app_fund_requests', []);
+  const [history, setHistory] = useLocalStorage<HistoryItem[]>('app_history', []);
+  const [messages, setMessages] = useLocalStorage<Message[]>('app_messages', []);
 
   // Effect to initialize or update user data when authUser changes
   useEffect(() => {
@@ -128,6 +156,7 @@ export const GlobalStateProvider = ({ children }: { children: ReactNode }) => {
         setWallets(prev => [...prev, newWallet]);
       }
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [authUser]);
 
   const addOrder = (order: Order) => {
@@ -204,7 +233,7 @@ export const GlobalStateProvider = ({ children }: { children: ReactNode }) => {
 
   const clearInbox = () => {
     if (!authUser) return;
-    setMessages(prev => prev.filter(m => m.recipient !== authUser.uid));
+    setMessages(prev => prev.filter(m => m.recipient !== authUser.uid && m.recipient !== 'all'));
     addHistoryItem({
         action: 'Cleared Inbox',
         target: authUser.uid,
