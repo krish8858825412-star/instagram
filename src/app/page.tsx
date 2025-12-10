@@ -181,7 +181,7 @@ export default function AuthPage() {
         <div className="flex items-center gap-3 mb-8">
           <LogoIcon className="h-10 w-10 text-primary" />
           <h1 className="text-3xl font-bold tracking-tight text-foreground">
-            Home
+            Instagram
           </h1>
         </div>
         <Card className="w-full max-w-md bg-transparent backdrop-blur-lg border-border/20 shadow-xl">
