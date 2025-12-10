@@ -15,10 +15,12 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ArrowLeft, CheckCircle, Link as LinkIcon, Loader2 } from "lucide-react";
+import { ArrowLeft, CheckCircle, Link as LinkIcon, Loader2, Wallet } from "lucide-react";
 import Image from 'next/image';
 import { useToast } from "@/hooks/use-toast";
 import { OrderPlacedDialog } from "@/components/order-placed-dialog";
+import { useGlobalState } from "@/contexts/state-context";
+import { useAuth } from "@/hooks/use-auth";
 
 const serviceDetails: { [key: string]: { title: string; unit: string; step: number } } = {
   followers: { title: "Followers", unit: "followers", step: 10 },
@@ -33,6 +35,8 @@ export default function ServiceOrderPage() {
   const router = useRouter();
   const params = useParams();
   const { toast } = useToast();
+  const { user } = useAuth();
+  const { wallet, addOrder, addHistoryItem } = useGlobalState();
   const service = Array.isArray(params.service) ? params.service[0] : params.service;
   const details = serviceDetails[service] || { title: "Service", unit: "items", step: 10 };
 
@@ -43,8 +47,8 @@ export default function ServiceOrderPage() {
   const [isPreviewing, setIsPreviewing] = useState(false);
   const [previewUrl, setPreviewUrl] = useState('');
 
-
   const price = (quantity / 10) * PRICE_PER_10_UNITS;
+  const hasSufficientFunds = wallet.balance >= price;
 
   const handleLinkChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setLink(e.target.value);
@@ -61,8 +65,6 @@ export default function ServiceOrderPage() {
         return;
     }
     setIsPreviewing(true);
-    // Simulate fetching preview. In a real app, this would fetch metadata from the link.
-    // This is a complex task often requiring a backend service to avoid CORS issues.
     setTimeout(() => {
         setPreviewUrl('https://picsum.photos/seed/instapreview/600/400');
         setIsPreviewing(false);
@@ -79,10 +81,36 @@ export default function ServiceOrderPage() {
       });
       return;
     }
+    if (!hasSufficientFunds) {
+       toast({
+        variant: "destructive",
+        title: "Insufficient Funds",
+        description: "You do not have enough money in your wallet to place this order.",
+      });
+      return;
+    }
     
     setIsSubmitting(true);
-    // Simulate API call for placing an order
+    
     setTimeout(() => {
+      const newOrder = {
+        id: `ORD${String(Date.now()).slice(-4)}`,
+        user: user?.displayName || 'Unknown User',
+        service: details.title,
+        link,
+        quantity,
+        price,
+        status: 'Pending',
+        date: new Date().toISOString(),
+      };
+      addOrder(newOrder);
+      addHistoryItem({
+        action: `Placed Order`,
+        target: newOrder.id,
+        user: newOrder.user,
+        date: new Date().toISOString(),
+      });
+
       setIsSubmitting(false);
       setShowSuccessDialog(true);
     }, 2000);
@@ -152,6 +180,15 @@ export default function ServiceOrderPage() {
                         Minimum order is {details.step} {details.unit}.
                     </p>
                   </div>
+                   <Card className="bg-muted/50 border-dashed">
+                    <CardHeader className="flex-row items-center justify-between p-4">
+                      <div className="flex items-center gap-2">
+                        <Wallet className="h-5 w-5 text-muted-foreground" />
+                        <span className="text-sm font-medium">Your Balance</span>
+                      </div>
+                      <span className={`text-lg font-bold ${hasSufficientFunds ? 'text-green-500' : 'text-destructive'}`}>₹{wallet.balance.toFixed(2)}</span>
+                    </CardHeader>
+                  </Card>
                 </CardContent>
                 <CardFooter className="flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
                   <div className="flex items-baseline gap-2">
@@ -160,7 +197,7 @@ export default function ServiceOrderPage() {
                       ₹{price.toFixed(2)}
                     </span>
                   </div>
-                  <Button type="submit" size="lg" className="w-full sm:w-auto" disabled={isSubmitting || !previewUrl}>
+                  <Button type="submit" size="lg" className="w-full sm:w-auto" disabled={isSubmitting || !previewUrl || !hasSufficientFunds}>
                     {isSubmitting ? (
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     ) : (

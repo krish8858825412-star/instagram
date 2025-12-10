@@ -2,9 +2,14 @@
 
 import { Header } from '@/components/header';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Inbox as InboxIcon } from 'lucide-react';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import { Inbox as InboxIcon, Mail } from 'lucide-react';
+import { useGlobalState } from '@/contexts/state-context';
+import { Badge } from '@/components/ui/badge';
 
 export default function InboxPage() {
+  const { messages } = useGlobalState();
+
   return (
     <div className="flex min-h-screen w-full flex-col">
       <Header />
@@ -17,10 +22,29 @@ export default function InboxPage() {
               <CardDescription>Your notifications and messages will appear here.</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="flex flex-col items-center justify-center h-64 border-2 border-dashed rounded-lg bg-muted/20">
-                <InboxIcon className="h-16 w-16 text-muted-foreground/50" />
-                <p className="mt-4 text-muted-foreground">Your inbox is empty.</p>
-              </div>
+              {messages.length > 0 ? (
+                <Accordion type="single" collapsible className="w-full">
+                  {messages.map((msg, index) => (
+                    <AccordionItem value={`item-${index}`} key={index}>
+                      <AccordionTrigger>
+                        <div className='flex items-center gap-4'>
+                           <Mail className='h-5 w-5 text-muted-foreground' />
+                           <span className='font-semibold'>{msg.subject}</span>
+                           <Badge variant="secondary">{new Date(msg.date).toLocaleDateString()}</Badge>
+                        </div>
+                      </AccordionTrigger>
+                      <AccordionContent className='pl-10'>
+                        <p>{msg.message}</p>
+                      </AccordionContent>
+                    </AccordionItem>
+                  ))}
+                </Accordion>
+              ) : (
+                <div className="flex flex-col items-center justify-center h-64 border-2 border-dashed rounded-lg bg-muted/20">
+                  <InboxIcon className="h-16 w-16 text-muted-foreground/50" />
+                  <p className="mt-4 text-muted-foreground">Your inbox is empty.</p>
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>

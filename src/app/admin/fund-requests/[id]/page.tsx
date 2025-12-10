@@ -8,35 +8,49 @@ import { Table, TableBody, TableCell, TableRow } from '@/components/ui/table';
 import { ArrowLeft, Check, X } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Separator } from '@/components/ui/separator';
-
-// Mock data - in a real app, you'd fetch this based on the ID
-const mockRequest = {
-  id: 'FUND001',
-  user: 'John Doe',
-  email: 'john@example.com',
-  amount: 500.00,
-  status: 'Pending',
-  date: '2024-07-30',
-  paymentMethod: 'UPI',
-  transactionId: 'abcdef123456',
-};
+import { useGlobalState } from '@/contexts/state-context';
+import { useEffect, useState } from 'react';
 
 export default function FundRequestDetailPage() {
   const router = useRouter();
   const params = useParams();
   const { toast } = useToast();
-  const id = params.id;
+  const { fundRequests, updateFundRequest, addHistoryItem } = useGlobalState();
+  const id = params.id as string;
 
-  // In a real app, you would fetch request details using the id
-  const request = mockRequest;
+  const [request, setRequest] = useState<any>(null);
 
-  const handleAction = (action: 'approve' | 'decline') => {
+  useEffect(() => {
+    const foundRequest = fundRequests.find((r) => r.id === id);
+    if (foundRequest) {
+      setRequest(foundRequest);
+    }
+  }, [id, fundRequests]);
+
+
+  const handleAction = (action: 'Approved' | 'Declined') => {
+    if (!request) return;
+    updateFundRequest(id, { status: action });
+     addHistoryItem({
+      action: `${action} Fund Request`,
+      target: id,
+      user: 'Admin',
+      date: new Date().toISOString(),
+    });
     toast({
-      title: `Fund Request ${action === 'approve' ? 'Approved' : 'Declined'}`,
-      description: `Request ID ${id} has been successfully ${action === 'approve' ? 'approved' : 'declined'}.`,
+      title: `Fund Request ${action}`,
+      description: `Request ID ${id} has been successfully ${action.toLowerCase()}.`,
     });
     router.push('/admin');
   };
+
+  if (!request) {
+    return (
+        <div className="flex min-h-screen w-full flex-col bg-muted/40 items-center justify-center">
+            <p>Request not found.</p>
+        </div>
+    )
+  }
 
   return (
     <div className="flex min-h-screen w-full flex-col bg-muted/40">
@@ -60,21 +74,21 @@ export default function FundRequestDetailPage() {
                 <Table>
                     <TableBody>
                         <TableRow><TableCell className="font-semibold">User</TableCell><TableCell>{request.user}</TableCell></TableRow>
-                        <TableRow><TableCell className="font-semibold">Email</TableCell><TableCell>{request.email}</TableCell></TableRow>
+                        <TableRow><TableCell className="font-semibold">Email</TableCell><TableCell>{/* Add email if available */}</TableCell></TableRow>
                         <TableRow><TableCell className="font-semibold">Amount</TableCell><TableCell>₹{request.amount.toFixed(2)}</TableCell></TableRow>
-                        <TableRow><TableCell className="font-semibold">Payment Method</TableCell><TableCell>{request.paymentMethod}</TableCell></TableRow>
-                        <TableRow><TableCell className="font-semibold">Transaction ID</TableCell><TableCell>{request.transactionId}</TableCell></TableRow>
+                        <TableRow><TableCell className="font-semibold">Payment Method</TableCell><TableCell>{request.paymentMethod || 'N/A'}</TableCell></TableRow>
+                        <TableRow><TableCell className="font-semibold">Transaction ID</TableCell><TableCell>{request.transactionId || 'N/A'}</TableCell></TableRow>
                          <TableRow><TableCell className="font-semibold">Status</TableCell><TableCell>{request.status}</TableCell></TableRow>
                     </TableBody>
                 </Table>
             </CardContent>
             <Separator />
             <CardFooter className="flex justify-end gap-2 p-4">
-                <Button variant="destructive" onClick={() => handleAction('decline')}>
+                <Button variant="destructive" onClick={() => handleAction('Declined')}>
                     <X className="mr-2 h-4 w-4" />
                     Decline
                 </Button>
-                <Button onClick={() => handleAction('approve')}>
+                <Button onClick={() => handleAction('Approved')}>
                     <Check className="mr-2 h-4 w-4" />
                     Approve
                 </Button>

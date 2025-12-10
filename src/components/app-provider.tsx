@@ -2,6 +2,7 @@
 
 import { AuthProvider } from "@/contexts/auth-context";
 import { ThemeProvider } from "@/contexts/theme-context";
+import { GlobalStateProvider } from "@/contexts/state-context";
 
 export function AppProvider({ children }: { children: React.ReactNode }) {
 
@@ -13,7 +14,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       disableTransitionOnChange
     >
       <AuthProvider>
-        {children}
+        <GlobalStateProvider>
+          {children}
+        </GlobalStateProvider>
       </AuthProvider>
     </ThemeProvider>
   );

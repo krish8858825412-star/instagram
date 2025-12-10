@@ -12,68 +12,46 @@ import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-
-// Mock data
-const users = [
-  { id: 'USR001', name: 'John Doe', email: 'john@example.com', date: '2024-07-28' },
-  { id: 'USR002', name: 'Jane Smith', email: 'jane@example.com', date: '2024-07-29' },
-];
-
-const orders = [
-  { id: 'ORD002', user: 'Jane Smith', service: 'Likes', quantity: 500, price: 50.00, status: 'Completed' },
-  { id: 'ORD001', user: 'John Doe', service: 'Followers', quantity: 100, price: 10.00, status: 'Pending' },
-  { id: 'ORD003', user: 'Jake Paul', service: 'Views', quantity: 10000, price: 25.00, status: 'Pending' },
-];
-
-const wallets = [
-  { userId: 'USR001', name: 'John Doe', balance: 150.00 },
-  { userId: 'USR002', name: 'Jane Smith', balance: 75.50 },
-];
-
-const fundRequests = [
-    { id: 'FUND002', user: 'Jane Smith', amount: 200, date: '2024-07-30', status: 'Approved' },
-    { id: 'FUND001', user: 'John Doe', amount: 500, date: '2024-07-30', status: 'Pending' },
-]
-
-const history = [
-    { id: 1, action: 'Approved Fund Request', target: 'FUND002', user: 'Admin', date: '2024-07-31 10:00 AM' },
-    { id: 2, action: 'Completed Order', target: 'ORD002', user: 'Admin', date: '2024-07-31 09:45 AM' },
-    { id: 3, action: 'User Registered', target: 'USR002', user: 'System', date: '2024-07-29 08:00 AM' },
-];
+import { useGlobalState } from '@/contexts/state-context';
 
 type AdminView = 'users' | 'orders' | 'wallets' | 'fund-requests' | 'all-history' | 'inbox';
 
-const sortPendingFirst = (a: {status: string}, b: {status: string}) => {
+export default function AdminPage() {
+  const [currentView, setCurrentView] = useState<AdminView>('orders');
+  const router = useRouter();
+  const { toast } = useToast();
+  const { users, orders, wallets, fundRequests, history, sendMessageToAll } = useGlobalState();
+
+  const sortPendingFirst = (a: { status: string }, b: { status: string }) => {
     if (a.status === 'Pending' && b.status !== 'Pending') return -1;
     if (a.status !== 'Pending' && b.status === 'Pending') return 1;
     return 0;
-};
+  };
 
-const sortedOrders = [...orders].sort(sortPendingFirst);
-const sortedFundRequests = [...fundRequests].sort(sortPendingFirst);
+  const sortedOrders = [...orders].sort(sortPendingFirst);
+  const sortedFundRequests = [...fundRequests].sort(sortPendingFirst);
 
-const viewConfig = {
+  const viewConfig = {
     users: { title: 'Users', icon: Users, description: 'Manage all users', data: users, count: users.length },
     orders: { title: 'Orders', icon: ShoppingCart, description: 'Review new orders', data: sortedOrders, count: orders.filter(o => o.status === 'Pending').length },
     wallets: { title: 'Wallets', icon: Wallet, description: 'View user balances', data: wallets, count: wallets.length },
     'fund-requests': { title: 'Fund Requests', icon: Banknote, description: 'Approve fund requests', data: sortedFundRequests, count: fundRequests.filter(fr => fr.status === 'Pending').length },
     'all-history': { title: 'All History', icon: History, description: 'View all admin and system actions', data: history, count: history.length },
     inbox: { title: 'Inbox', icon: MessageSquare, description: 'Send messages to users', data: [], count: 0 },
-}
-
-export default function AdminPage() {
-  
-  const [currentView, setCurrentView] = useState<AdminView>('orders');
-  const router = useRouter();
-  const { toast } = useToast();
+  };
 
   const handleMessageSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    const form = e.target as HTMLFormElement;
+    const subject = (form.elements.namedItem('subject') as HTMLInputElement).value;
+    const message = (form.elements.namedItem('message') as HTMLTextAreaElement).value;
+    
+    sendMessageToAll(subject, message);
+    
     toast({
       title: 'Message Sent!',
       description: 'Your message has been sent to all users.',
     });
-    const form = e.target as HTMLFormElement;
     form.reset();
   };
 
@@ -102,7 +80,7 @@ export default function AdminPage() {
                                 <TableCell>{user.id}</TableCell>
                                 <TableCell>{user.name}</TableCell>
                                 <TableCell>{user.email}</TableCell>
-                                <TableCell>{user.date}</TableCell>
+                                <TableCell>{new Date(user.date).toLocaleDateString()}</TableCell>
                             </TableRow>
                             ))}
                         </TableBody>
@@ -208,7 +186,7 @@ export default function AdminPage() {
                                         <TableCell>{request.id}</TableCell>
                                         <TableCell>{request.user}</TableCell>
                                         <TableCell>₹{request.amount.toFixed(2)}</TableCell>
-                                        <TableCell>{request.date}</TableCell>
+                                        <TableCell>{new Date(request.date).toLocaleDateString()}</TableCell>
                                         <TableCell>
                                             <Badge variant={request.status === 'Pending' ? 'outline' : 'secondary'}>{request.status}</Badge>
                                         </TableCell>
@@ -237,12 +215,12 @@ export default function AdminPage() {
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {history.map((item) => (
-                                <TableRow key={item.id} className="bg-muted/30 text-muted-foreground">
+                            {history.map((item, index) => (
+                                <TableRow key={index} className="bg-muted/30 text-muted-foreground">
                                     <TableCell>{item.action}</TableCell>
                                     <TableCell>{item.target}</TableCell>
                                     <TableCell>{item.user}</TableCell>
-                                    <TableCell>{item.date}</TableCell>
+                                    <TableCell>{new Date(item.date).toLocaleString()}</TableCell>
                                 </TableRow>
                             ))}
                         </TableBody>
@@ -261,11 +239,11 @@ export default function AdminPage() {
                         <form onSubmit={handleMessageSubmit} className="space-y-4">
                             <div className="space-y-2">
                                 <Label htmlFor="subject">Subject</Label>
-                                <Input id="subject" placeholder="Message Subject" required />
+                                <Input id="subject" name="subject" placeholder="Message Subject" required />
                             </div>
                             <div className="space-y-2">
                                 <Label htmlFor="message">Message</Label>
-                                <Textarea id="message" placeholder="Type your message here..." required rows={6} />
+                                <Textarea id="message" name="message" placeholder="Type your message here..." required rows={6} />
                             </div>
                             <Button type="submit">Send Message to All Users</Button>
                         </form>
@@ -302,7 +280,7 @@ export default function AdminPage() {
                         <CardContent>
                             <div className="text-2xl font-bold">
                                 {count}
-                                {isPendingView && <span className="text-sm font-normal text-muted-foreground"> pending</span>}
+                                {isPendingView && count > 0 && <span className="text-sm font-normal text-muted-foreground"> pending</span>}
                             </div>
                             <p className="text-xs text-muted-foreground">{viewConfig[view].description}</p>
                         </CardContent>

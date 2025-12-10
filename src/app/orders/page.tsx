@@ -5,46 +5,22 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Package } from 'lucide-react';
-
-// Mock data for orders
-const orders = [
-  {
-    id: 'ORD001',
-    service: 'Followers',
-    quantity: 100,
-    price: 10.00,
-    status: 'Completed',
-    date: '2024-07-28',
-  },
-  {
-    id: 'ORD002',
-    service: 'Likes',
-    quantity: 500,
-    price: 50.00,
-    status: 'In Progress',
-    date: '2024-07-29',
-  },
-  {
-    id: 'ORD003',
-    service: 'Views',
-    quantity: 10000,
-    price: 100.00,
-    status: 'Pending',
-    date: '2024-07-30',
-  },
-];
+import { useGlobalState } from '@/contexts/state-context';
 
 export default function OrdersPage() {
+  const { orders } = useGlobalState();
+
   const getStatusVariant = (status: string) => {
     switch (status) {
       case 'Completed':
         return 'default';
       case 'In Progress':
-        return 'secondary';
       case 'Pending':
-        return 'outline';
-      default:
+        return 'secondary';
+      case 'Declined':
         return 'destructive';
+      default:
+        return 'outline';
     }
   };
 
@@ -79,7 +55,7 @@ export default function OrdersPage() {
                         <TableCell>{order.service}</TableCell>
                         <TableCell>{order.quantity.toLocaleString()}</TableCell>
                         <TableCell>₹{order.price.toFixed(2)}</TableCell>
-                        <TableCell>{order.date}</TableCell>
+                        <TableCell>{new Date(order.date).toLocaleDateString()}</TableCell>
                         <TableCell>
                           <Badge variant={getStatusVariant(order.status) as any}>{order.status}</Badge>
                         </TableCell>

@@ -4,9 +4,39 @@ import { Header } from '@/components/header';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { DollarSign, PlusCircle } from 'lucide-react';
+import { useGlobalState } from '@/contexts/state-context';
+import { useAuth } from '@/hooks/use-auth';
+import { useToast } from '@/hooks/use-toast';
 
 export default function WalletPage() {
-  const balance = 1250.75; // Mock data
+  const { wallet, addFundRequest, addHistoryItem } = useGlobalState();
+  const { user } = useAuth();
+  const { toast } = useToast();
+
+  const handleAddFunds = () => {
+    // This is a mock implementation. In a real app, this would open a payment dialog.
+    const amount = 500; // Mock amount
+    const newRequest = {
+        id: `FUND${String(Date.now()).slice(-4)}`,
+        user: user?.displayName || 'Unknown User',
+        amount,
+        date: new Date().toISOString(),
+        status: 'Pending',
+        paymentMethod: 'UPI',
+        transactionId: `T${Date.now()}`
+    };
+    addFundRequest(newRequest);
+    addHistoryItem({
+        action: 'Created Fund Request',
+        target: newRequest.id,
+        user: newRequest.user,
+        date: new Date().toISOString(),
+    });
+    toast({
+        title: 'Fund Request Submitted',
+        description: `Your request to add ₹${amount.toFixed(2)} has been sent for approval.`
+    })
+  }
 
   return (
     <div className="flex min-h-screen w-full flex-col">
@@ -24,16 +54,16 @@ export default function WalletPage() {
             </CardHeader>
             <CardContent className="space-y-6">
                 <div className="text-5xl font-extrabold tracking-tighter text-primary">
-                    ₹{balance.toFixed(2)}
+                    ₹{wallet.balance.toFixed(2)}
                 </div>
-                <Button size="lg" className="w-full sm:w-auto">
+                <Button size="lg" className="w-full sm:w-auto" onClick={handleAddFunds}>
                     <PlusCircle className="mr-2 h-5 w-5" />
-                    Add Funds
+                    Add Funds (Demo)
                 </Button>
                 <div className="pt-6">
                     <h3 className="text-xl font-semibold mb-4">Transaction History</h3>
                     <div className="border rounded-lg p-4 text-center bg-muted/20">
-                        <p className="text-muted-foreground">No transactions yet.</p>
+                        <p className="text-muted-foreground">Transaction history will be shown here.</p>
                     </div>
                 </div>
             </CardContent>

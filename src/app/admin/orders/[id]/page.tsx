@@ -9,36 +9,49 @@ import { ArrowLeft, Check, X } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
-
-// Mock data - in a real app, you'd fetch this based on the ID
-const mockOrder = {
-  id: 'ORD001',
-  user: 'John Doe',
-  email: 'john@example.com',
-  service: 'Followers',
-  link: 'https://www.instagram.com/p/C-aaaaa-aaaa/',
-  quantity: 100,
-  price: 10.00,
-  status: 'Pending',
-  date: '2024-07-28',
-};
+import { useGlobalState } from '@/contexts/state-context';
+import { useEffect, useState } from 'react';
 
 export default function OrderDetailPage() {
   const router = useRouter();
   const params = useParams();
   const { toast } = useToast();
-  const id = params.id;
+  const { orders, updateOrder, addHistoryItem } = useGlobalState();
+  const id = params.id as string;
 
-  // In a real app, you would fetch order details using the id
-  const order = mockOrder;
+  const [order, setOrder] = useState<any>(null);
 
-  const handleAction = (action: 'approve' | 'decline') => {
+  useEffect(() => {
+      const foundOrder = orders.find(o => o.id === id);
+      if(foundOrder) {
+          setOrder(foundOrder);
+      }
+  }, [id, orders]);
+
+
+  const handleAction = (action: 'Completed' | 'Declined') => {
+    if (!order) return;
+    updateOrder(id, { status: action });
+     addHistoryItem({
+      action: `${action} Order`,
+      target: id,
+      user: 'Admin',
+      date: new Date().toISOString(),
+    });
     toast({
-      title: `Order ${action === 'approve' ? 'Approved' : 'Declined'}`,
-      description: `Order ID ${id} has been successfully ${action === 'approve' ? 'approved' : 'declined'}.`,
+      title: `Order ${action}`,
+      description: `Order ID ${id} has been successfully updated.`,
     });
     router.push('/admin');
   };
+  
+  if (!order) {
+    return (
+        <div className="flex min-h-screen w-full flex-col bg-muted/40 items-center justify-center">
+            <p>Order not found.</p>
+        </div>
+    )
+  }
   
   return (
     <div className="flex min-h-screen w-full flex-col bg-muted/40">
@@ -62,7 +75,7 @@ export default function OrderDetailPage() {
                 <Table>
                     <TableBody>
                         <TableRow><TableCell className="font-semibold">User</TableCell><TableCell>{order.user}</TableCell></TableRow>
-                        <TableRow><TableCell className="font-semibold">Email</TableCell><TableCell>{order.email}</TableCell></TableRow>
+                        <TableRow><TableCell className="font-semibold">Email</TableCell><TableCell>{/* user email */}</TableCell></TableRow>
                         <TableRow><TableCell className="font-semibold">Service</TableCell><TableCell>{order.service}</TableCell></TableRow>
                         <TableRow><TableCell className="font-semibold">Content Link</TableCell><TableCell><a href={order.link} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">{order.link}</a></TableCell></TableRow>
                         <TableRow><TableCell className="font-semibold">Quantity</TableCell><TableCell>{order.quantity.toLocaleString()}</TableCell></TableRow>
@@ -73,11 +86,11 @@ export default function OrderDetailPage() {
             </CardContent>
             <Separator />
             <CardFooter className="flex justify-end gap-2 p-4">
-                <Button variant="destructive" onClick={() => handleAction('decline')}>
+                <Button variant="destructive" onClick={() => handleAction('Declined')}>
                     <X className="mr-2 h-4 w-4" />
                     Decline
                 </Button>
-                <Button onClick={() => handleAction('approve')}>
+                <Button onClick={() => handleAction('Completed')}>
                     <Check className="mr-2 h-4 w-4" />
                     Approve
                 </Button>
