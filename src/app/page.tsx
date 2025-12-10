@@ -22,15 +22,6 @@ import {
   FormItem,
   FormMessage,
 } from "@/components/ui/form";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-  DialogClose,
-} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { LogoIcon } from "@/components/icons";
@@ -50,22 +41,16 @@ const signInSchema = z.object({
   password: z.string().min(1, { message: "Password is required." }),
 });
 
-const passwordResetSchema = z.object({
-  email: z.string().email({ message: "Invalid email address." }),
-});
-
 const ADMIN_SECRET_CODE = "99241%@8#₹₹1625";
 
 export default function AuthPage() {
   const [isSigningUp, setIsSigningUp] = useState(false);
-  const [isResettingPassword, setIsResettingPassword] = useState(false);
   const [isAdminMode, setIsAdminMode] = useState(false);
   const {
     user,
     loading: authLoading,
     signUp,
     signIn,
-    sendPasswordReset,
   } = useAuth();
   const router = useRouter();
   const { toast } = useToast();
@@ -83,13 +68,6 @@ export default function AuthPage() {
       name: "",
       email: "",
       password: "",
-    },
-  });
-
-  const passwordResetForm = useForm({
-    resolver: zodResolver(passwordResetSchema),
-    defaultValues: {
-      email: "",
     },
   });
 
@@ -132,33 +110,6 @@ export default function AuthPage() {
       toast({
         variant: "destructive",
         title: "Authentication Error",
-        description: description,
-      });
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const onPasswordReset = async (values: z.infer<typeof passwordResetSchema>) => {
-    setIsSubmitting(true);
-    try {
-      await sendPasswordReset(values.email);
-      toast({
-        title: "Password Reset Email Sent",
-        description: "Check your inbox for a link to reset your password.",
-      });
-      setIsResettingPassword(false);
-      passwordResetForm.reset();
-    } catch (error: any) {
-      let description = "An unexpected error occurred. Please try again.";
-      if (error.code === 'auth/user-not-found') {
-        description = "No user found with this email address.";
-      } else if (error.message) {
-        description = error.message;
-      }
-      toast({
-        variant: "destructive",
-        title: "Error",
         description: description,
       });
     } finally {
@@ -265,20 +216,6 @@ export default function AuthPage() {
                       />
                     </div>
 
-                    {!isSigningUp && (
-                      <div className="flex justify-end">
-                          <Button
-                            type="button"
-                            variant="link"
-                            size="sm"
-                            className="h-auto p-0 text-primary"
-                            onClick={() => setIsResettingPassword(true)}
-                          >
-                            Forgot Password?
-                          </Button>
-                        </div>
-                    )}
-
                     <Button type="submit" className="w-full" disabled={isSubmitting}>
                       {isSubmitting && (
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -301,49 +238,6 @@ export default function AuthPage() {
           </CardContent>
         </Card>
       </main>
-
-      <Dialog open={isResettingPassword} onOpenChange={setIsResettingPassword}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Reset Password</DialogTitle>
-            <DialogDescription>
-              Enter your email address and we'll send you a link to reset your password.
-            </DialogDescription>
-          </DialogHeader>
-          <Form {...passwordResetForm}>
-            <form onSubmit={passwordResetForm.handleSubmit(onPasswordReset)} className="space-y-4">
-                <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-                  <FormField
-                    control={passwordResetForm.control}
-                    name="email"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormControl>
-                          <Input placeholder="name@example.com" {...field} className="pl-10" />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-              <DialogFooter>
-                <DialogClose asChild>
-                  <Button type="button" variant="secondary" disabled={isSubmitting}>
-                    Cancel
-                  </Button>
-                </DialogClose>
-                <Button type="submit" disabled={isSubmitting}>
-                  {isSubmitting && (
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  )}
-                  Send Reset Link
-                </Button>
-              </DialogFooter>
-            </form>
-          </Form>
-        </DialogContent>
-      </Dialog>
     </>
   );
 }
