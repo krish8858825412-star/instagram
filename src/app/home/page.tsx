@@ -3,6 +3,7 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { useAuth } from "@/hooks/use-auth";
 import { Header } from "@/components/header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -30,11 +31,11 @@ export default function HomePage() {
   }
 
   const features = [
-    { title: "Get Followers", icon: Users },
-    { title: "Get Likes", icon: ThumbsUp },
-    { title: "Get Comments", icon: MessageSquare },
-    { title: "Get Views", icon: Eye },
-  ]
+    { title: "Get Followers", icon: Users, href: "/order/followers" },
+    { title: "Get Likes", icon: ThumbsUp, href: "/order/likes" },
+    { title: "Get Comments", icon: MessageSquare, href: "/order/comments" },
+    { title: "Get Views", icon: Eye, href: "/order/views" },
+  ];
 
   return (
     <div className="flex min-h-screen w-full flex-col">
@@ -48,14 +49,14 @@ export default function HomePage() {
         <Separator />
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
           {features.map((feature) => (
-            <Card key={feature.title} className="shadow-xl bg-card/10 backdrop-blur-lg border-border/20 hover:border-primary/80 transition-all cursor-pointer">
+            <Card key={feature.title} className="shadow-xl bg-card/10 backdrop-blur-lg border-border/20 hover:border-primary/80 transition-all">
               <CardHeader className="flex flex-row items-center justify-between pb-2">
                 <CardTitle className="text-lg font-medium">{feature.title}</CardTitle>
                 <feature.icon className="h-6 w-6 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <Button className="w-full mt-4">
-                  Proceed
+                <Button asChild className="w-full mt-4">
+                  <Link href={feature.href}>Proceed</Link>
                 </Button>
               </CardContent>
             </Card>
