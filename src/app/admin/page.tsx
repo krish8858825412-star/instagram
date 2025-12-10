@@ -7,20 +7,20 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Users, ShoppingCart, Wallet, Banknote, History, MessageSquare } from 'lucide-react';
+import { Users, ShoppingCart, Wallet, Banknote, History, MessageSquare, Settings } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { useGlobalState } from '@/contexts/state-context';
 
-type AdminView = 'users' | 'orders' | 'wallets' | 'fund-requests' | 'all-history' | 'inbox';
+type AdminView = 'users' | 'orders' | 'wallets' | 'fund-requests' | 'all-history' | 'inbox' | 'settings';
 
 export default function AdminPage() {
   const [currentView, setCurrentView] = useState<AdminView>('orders');
   const router = useRouter();
   const { toast } = useToast();
-  const { users, orders, wallets, fundRequests, history, sendMessageToAll } = useGlobalState();
+  const { users, orders, wallets, fundRequests, history, sendMessageToAll, qrCodeUrl, setQrCodeUrl } = useGlobalState();
 
   const sortPendingFirst = (a: { status: string }, b: { status: string }) => {
     if (a.status === 'Pending' && b.status !== 'Pending') return -1;
@@ -36,8 +36,9 @@ export default function AdminPage() {
     orders: { title: 'Orders', icon: ShoppingCart, description: 'Review new orders', data: sortedOrders, count: orders.filter(o => o.status === 'Pending').length },
     wallets: { title: 'Wallets', icon: Wallet, description: 'View user balances', data: wallets, count: wallets.length },
     'fund-requests': { title: 'Fund Requests', icon: Banknote, description: 'Approve fund requests', data: sortedFundRequests, count: fundRequests.filter(fr => fr.status === 'Pending').length },
-    'all-history': { title: 'All History', icon: History, description: 'View all admin and system actions', data: history, count: history.length },
+    'all-history': { title: 'All History', icon: History, description: 'View all system actions', data: history, count: history.length },
     inbox: { title: 'Inbox', icon: MessageSquare, description: 'Send messages to users', data: [], count: 0 },
+    settings: { title: 'Settings', icon: Settings, description: 'Configure application', data: [], count: 0 },
   };
 
   const handleMessageSubmit = (e: React.FormEvent) => {
@@ -54,6 +55,17 @@ export default function AdminPage() {
     });
     form.reset();
   };
+
+  const handleSettingsSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const form = e.target as HTMLFormElement;
+    const newQrCodeUrl = (form.elements.namedItem('qrCodeUrl') as HTMLInputElement).value;
+    setQrCodeUrl(newQrCodeUrl);
+    toast({
+      title: 'Settings Saved!',
+      description: 'The QR code URL has been updated.',
+    });
+  }
 
   const renderContent = () => {
     switch(currentView) {
@@ -250,6 +262,33 @@ export default function AdminPage() {
                     </CardContent>
                 </Card>
             );
+        case 'settings':
+            return (
+               <Card className="shadow-xl bg-card border-border/20">
+                   <CardHeader>
+                       <CardTitle>Application Settings</CardTitle>
+                       <CardDescription>Configure global settings for the application.</CardDescription>
+                   </CardHeader>
+                   <CardContent>
+                       <form onSubmit={handleSettingsSubmit} className="space-y-4">
+                           <div className="space-y-2">
+                               <Label htmlFor="qrCodeUrl">UPI QR Code Image URL</Label>
+                               <Input 
+                                 id="qrCodeUrl" 
+                                 name="qrCodeUrl" 
+                                 placeholder="https://example.com/qr-code.png" 
+                                 defaultValue={qrCodeUrl}
+                                 required 
+                               />
+                               <p className='text-xs text-muted-foreground'>
+                                   Enter the direct URL to your QR code image. This will be shown to users on the Add Funds page.
+                               </p>
+                           </div>
+                           <Button type="submit">Save Settings</Button>
+                       </form>
+                   </CardContent>
+               </Card>
+           );
         default:
             return null;
     }
@@ -261,11 +300,13 @@ export default function AdminPage() {
         <h1 className="text-xl font-bold">Admin Panel</h1>
       </header>
       <main className="flex flex-1 flex-col gap-4 p-4 md:gap-8 md:p-8">
-        <div className="grid gap-4 md:grid-cols-2 md:gap-8 lg:grid-cols-3 xl:grid-cols-6">
+        <div className="grid gap-4 md:grid-cols-2 md:gap-8 lg:grid-cols-4 xl:grid-cols-7">
             {(Object.keys(viewConfig) as AdminView[]).map((view) => {
                 const Icon = viewConfig[view].icon;
                 const isPendingView = view === 'orders' || view === 'fund-requests';
-                const count = isPendingView ? viewConfig[view].count : viewConfig[view].data.length;
+                const count = view === 'settings' || view === 'inbox' 
+                    ? viewConfig[view].count 
+                    : isPendingView ? viewConfig[view].count : viewConfig[view].data.length;
 
                 return (
                     <Card 

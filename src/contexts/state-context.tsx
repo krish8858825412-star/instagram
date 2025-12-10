@@ -63,6 +63,7 @@ interface GlobalState {
   fundRequests: FundRequest[];
   history: HistoryItem[];
   messages: Message[];
+  qrCodeUrl: string;
   addOrder: (order: Order) => void;
   updateOrder: (orderId: string, updates: Partial<Order>) => void;
   addFundRequest: (request: FundRequest) => void;
@@ -70,6 +71,7 @@ interface GlobalState {
   addHistoryItem: (item: HistoryItem) => void;
   sendMessageToAll: (subject: string, message: string) => void;
   clearInbox: () => void;
+  setQrCodeUrl: (url: string) => void;
 }
 
 // Create the context
@@ -113,6 +115,7 @@ export const GlobalStateProvider = ({ children }: { children: ReactNode }) => {
   const [fundRequests, setFundRequests] = useLocalStorage<FundRequest[]>('app_fund_requests', []);
   const [history, setHistory] = useLocalStorage<HistoryItem[]>('app_history', []);
   const [messages, setMessages] = useLocalStorage<Message[]>('app_messages', []);
+  const [qrCodeUrl, setQrCodeUrl] = useLocalStorage<string>('app_qr_code_url', '');
 
   // Effect to initialize or update user data when authUser changes
   useEffect(() => {
@@ -254,6 +257,7 @@ export const GlobalStateProvider = ({ children }: { children: ReactNode }) => {
     fundRequests,
     history,
     messages: userMessages,
+    qrCodeUrl,
     addOrder,
     updateOrder,
     addFundRequest,
@@ -261,6 +265,7 @@ export const GlobalStateProvider = ({ children }: { children: ReactNode }) => {
     addHistoryItem,
     sendMessageToAll,
     clearInbox,
+    setQrCodeUrl,
   };
 
   return (

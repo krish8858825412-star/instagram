@@ -5,7 +5,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/use-auth';
 import { Header } from '@/components/header';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -19,7 +19,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 export default function AddFundsPage() {
   const { user, loading } = useAuth();
   const router = useRouter();
-  const { addFundRequest, addHistoryItem } = useGlobalState();
+  const { addFundRequest, addHistoryItem, qrCodeUrl } = useGlobalState();
   const { toast } = useToast();
 
   const [amount, setAmount] = useState('');
@@ -76,6 +76,8 @@ export default function AddFundsPage() {
   if (loading || !user) {
     return <SplashScreen />;
   }
+  
+  const displayQrCode = qrCodeUrl || "https://placehold.co/250x250/000000/FFFFFF?text=Scan+Me";
 
   return (
     <div className="flex min-h-screen w-full flex-col">
@@ -93,7 +95,7 @@ export default function AddFundsPage() {
             </CardHeader>
             <CardContent className="space-y-6">
                 <div className="flex justify-center p-4 bg-muted/50 rounded-lg">
-                    <Image src="https://placehold.co/250x250/000000/FFFFFF?text=Scan+Me" alt="UPI QR Code" width={250} height={250} className='rounded-md border-4 border-white shadow-lg' data-ai-hint="qr code" />
+                    <Image src={displayQrCode} alt="UPI QR Code" width={250} height={250} className='rounded-md border-4 border-white shadow-lg' data-ai-hint="qr code" />
                 </div>
                 
                 <Alert>
