@@ -1,48 +1,22 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/use-auth";
 import { Header } from "@/components/header";
-import { personalizedHomepageLayout } from "@/ai/flows/personalized-homepage-layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Terminal } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 
 export default function HomePage() {
-  const { user, loading, signOut } = useAuth();
+  const { user, loading } = useAuth();
   const router = useRouter();
-  const [layoutSuggestion, setLayoutSuggestion] = useState<string | null>(null);
-  const [isLayoutLoading, setIsLayoutLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!loading && !user) {
       router.replace("/");
     }
   }, [user, loading, router]);
-
-  useEffect(() => {
-    if (user?.email) {
-      const generateLayout = async () => {
-        setIsLayoutLoading(true);
-        setError(null);
-        try {
-          const userInfo = `The user's email is ${user.email}. The user has expressed interest in professional, modern, and minimalist UI/UX design. They appreciate clean layouts and informative dashboards.`;
-          const result = await personalizedHomepageLayout({ userInfo });
-          setLayoutSuggestion(result.layoutSuggestion);
-        } catch (err) {
-          console.error("Error generating homepage layout:", err);
-          setError("We couldn't generate your personalized dashboard at this time. Please try again later.");
-        } finally {
-          setIsLayoutLoading(false);
-        }
-      };
-      generateLayout();
-    }
-  }, [user]);
 
   if (loading || !user) {
     return (
@@ -65,29 +39,10 @@ export default function HomePage() {
         <div className="grid gap-4 md:gap-8">
           <Card className="shadow-xl bg-transparent backdrop-blur-lg border-border/20">
             <CardHeader>
-              <CardTitle>Your Personalized Dashboard</CardTitle>
+              <CardTitle>Your Dashboard</CardTitle>
             </CardHeader>
             <CardContent>
-              {isLayoutLoading ? (
-                <div className="space-y-4">
-                  <Skeleton className="h-6 w-3/4" />
-                  <Skeleton className="h-4 w-full" />
-                  <Skeleton className="h-4 w-5/6" />
-                  <Skeleton className="h-4 w-full" />
-                </div>
-              ) : error ? (
-                <Alert variant="destructive">
-                  <Terminal className="h-4 w-4" />
-                  <AlertTitle>Generation Failed</AlertTitle>
-                  <AlertDescription>{error}</AlertDescription>
-                </Alert>
-              ) : (
-                <div className="prose prose-sm max-w-none text-foreground">
-                    <pre className="whitespace-pre-wrap font-body text-base bg-transparent">
-                        {layoutSuggestion}
-                    </pre>
-                </div>
-              )}
+              <p>This is your personal dashboard. More widgets and features coming soon!</p>
             </CardContent>
           </Card>
         </div>
