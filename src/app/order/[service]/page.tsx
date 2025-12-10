@@ -122,7 +122,7 @@ export default function ServiceOrderPage() {
                       />
                       <Button type="button" onClick={handlePreview} disabled={isPreviewing || !link}>
                         {isPreviewing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <LinkIcon className="mr-2 h-4 w-4" />}
-                        Preview
+                        Generate Preview
                       </Button>
                     </div>
                   </div>
