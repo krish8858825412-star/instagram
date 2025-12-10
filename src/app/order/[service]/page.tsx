@@ -15,17 +15,16 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Slider } from "@/components/ui/slider";
 import { ArrowLeft, CheckCircle, Link as LinkIcon, Loader2 } from "lucide-react";
 import Image from 'next/image';
 import { useToast } from "@/hooks/use-toast";
 import { OrderPlacedDialog } from "@/components/order-placed-dialog";
 
-const serviceDetails: { [key: string]: { title: string; unit: string; max: number; step: number } } = {
-  followers: { title: "Followers", unit: "followers", max: 1000, step: 10 },
-  likes: { title: "Likes", unit: "likes", max: 10000, step: 100 },
-  comments: { title: "Comments", unit: "comments", max: 500, step: 5 },
-  views: { title: "Views", unit: "views", max: 100000, step: 1000 },
+const serviceDetails: { [key: string]: { title: string; unit: string; step: number } } = {
+  followers: { title: "Followers", unit: "followers", step: 10 },
+  likes: { title: "Likes", unit: "likes", step: 100 },
+  comments: { title: "Comments", unit: "comments", step: 5 },
+  views: { title: "Views", unit: "views", step: 1000 },
 };
 
 const PRICE_PER_10_UNITS = 1; // 1 Rupee per 10 units
@@ -35,7 +34,7 @@ export default function ServiceOrderPage() {
   const params = useParams();
   const { toast } = useToast();
   const service = Array.isArray(params.service) ? params.service[0] : params.service;
-  const details = serviceDetails[service] || { title: "Service", unit: "items", max: 1000, step: 10 };
+  const details = serviceDetails[service] || { title: "Service", unit: "items", step: 10 };
 
   const [link, setLink] = useState("");
   const [quantity, setQuantity] = useState(details.step);
@@ -62,10 +61,9 @@ export default function ServiceOrderPage() {
         return;
     }
     setIsPreviewing(true);
-    // Simulate fetching preview
+    // Simulate fetching preview. In a real app, this would fetch metadata from the link.
+    // This is a complex task often requiring a backend service to avoid CORS issues.
     setTimeout(() => {
-        // In a real app, you would fetch metadata from the link.
-        // Here we'll just use a placeholder image.
         setPreviewUrl('https://picsum.photos/seed/instapreview/600/400');
         setIsPreviewing(false);
     }, 1500);
@@ -83,7 +81,7 @@ export default function ServiceOrderPage() {
     }
     
     setIsSubmitting(true);
-    // Simulate API call
+    // Simulate API call for placing an order
     setTimeout(() => {
       setIsSubmitting(false);
       setShowSuccessDialog(true);
@@ -123,7 +121,7 @@ export default function ServiceOrderPage() {
                         className="flex-grow"
                       />
                       <Button type="button" onClick={handlePreview} disabled={isPreviewing || !link}>
-                        {isPreviewing && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                        {isPreviewing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <LinkIcon className="mr-2 h-4 w-4" />}
                         Preview
                       </Button>
                     </div>
@@ -131,30 +129,28 @@ export default function ServiceOrderPage() {
 
                   {previewUrl && (
                     <div className="space-y-2 animation-focus-in">
-                        <Label>Preview</Label>
+                        <Label>Content Preview</Label>
                         <div className="rounded-lg overflow-hidden border border-border/20 aspect-video relative bg-muted flex items-center justify-center">
                             <Image src={previewUrl} alt="Content Preview" layout="fill" objectFit="cover" data-ai-hint="social media post" />
+                            <p className="z-10 text-white bg-black/50 p-2 rounded-md">Live preview is for demonstration</p>
                         </div>
                     </div>
                   )}
 
-                  <div className="space-y-4">
-                    <div className="flex justify-between items-baseline">
-                      <Label htmlFor="quantity">Quantity</Label>
-                      <span className="text-2xl font-bold text-primary">{quantity.toLocaleString()}</span>
-                    </div>
-                    <Slider
+                  <div className="space-y-2">
+                    <Label htmlFor="quantity">Quantity</Label>
+                    <Input
                       id="quantity"
+                      type="number"
+                      value={quantity}
+                      onChange={(e) => setQuantity(Math.max(0, parseInt(e.target.value) || 0))}
                       min={details.step}
-                      max={details.max}
                       step={details.step}
-                      value={[quantity]}
-                      onValueChange={(value) => setQuantity(value[0])}
+                      required
                     />
-                     <div className="flex justify-between text-xs text-muted-foreground">
-                        <span>Min: {details.step.toLocaleString()}</span>
-                        <span>Max: {details.max.toLocaleString()}</span>
-                    </div>
+                    <p className="text-xs text-muted-foreground">
+                        Minimum order is {details.step} {details.unit}.
+                    </p>
                   </div>
                 </CardContent>
                 <CardFooter className="flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
@@ -164,7 +160,7 @@ export default function ServiceOrderPage() {
                       ₹{price.toFixed(2)}
                     </span>
                   </div>
-                  <Button type="submit" size="lg" className="w-full sm:w-auto" disabled={isSubmitting}>
+                  <Button type="submit" size="lg" className="w-full sm:w-auto" disabled={isSubmitting || !previewUrl}>
                     {isSubmitting ? (
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     ) : (
