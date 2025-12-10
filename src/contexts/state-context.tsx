@@ -47,6 +47,8 @@ interface HistoryItem {
 }
 
 interface Message {
+    id: string;
+    recipient: string; // 'all' or a specific userId
     subject: string;
     message: string;
     date: string;
@@ -67,6 +69,7 @@ interface GlobalState {
   updateFundRequest: (requestId: string, updates: Partial<FundRequest>) => void;
   addHistoryItem: (item: HistoryItem) => void;
   sendMessageToAll: (subject: string, message: string) => void;
+  clearInbox: () => void;
 }
 
 // Create the context
@@ -102,6 +105,16 @@ export const GlobalStateProvider = ({ children }: { children: ReactNode }) => {
           user: 'System',
           date: new Date().toISOString(),
         });
+        
+        // Add welcome message
+        const welcomeMessage: Message = {
+            id: `msg-${Date.now()}`,
+            recipient: authUser.uid,
+            subject: "Welcome to Instagram!",
+            message: `Hi ${newUser.name}, welcome aboard! We're thrilled to have you. You can start by exploring our services or adding funds to your wallet.`,
+            date: new Date().toISOString(),
+        };
+        setMessages(prev => [...prev, welcomeMessage]);
       }
 
       // Check if wallet already exists
@@ -173,7 +186,9 @@ export const GlobalStateProvider = ({ children }: { children: ReactNode }) => {
   }
   
   const sendMessageToAll = (subject: string, message: string) => {
-    const newMessage = {
+    const newMessage: Message = {
+      id: `msg-${Date.now()}`,
+      recipient: 'all',
       subject,
       message,
       date: new Date().toISOString(),
@@ -187,8 +202,20 @@ export const GlobalStateProvider = ({ children }: { children: ReactNode }) => {
     })
   }
 
-  const currentUserWallet = wallets.find(w => w.userId === authUser?.uid) || { userId: '', name: '', balance: 0 };
+  const clearInbox = () => {
+    if (!authUser) return;
+    setMessages(prev => prev.filter(m => m.recipient !== authUser.uid));
+    addHistoryItem({
+        action: 'Cleared Inbox',
+        target: authUser.uid,
+        user: authUser.displayName || 'User',
+        date: new Date().toISOString(),
+    });
+  }
 
+  const currentUserWallet = wallets.find(w => w.userId === authUser?.uid) || { userId: '', name: '', balance: 0 };
+  
+  const userMessages = messages.filter(m => m.recipient === 'all' || m.recipient === authUser?.uid);
 
   const value = {
     users,
@@ -197,13 +224,14 @@ export const GlobalStateProvider = ({ children }: { children: ReactNode }) => {
     wallet: currentUserWallet,
     fundRequests,
     history,
-    messages,
+    messages: userMessages,
     addOrder,
     updateOrder,
     addFundRequest,
     updateFundRequest,
     addHistoryItem,
     sendMessageToAll,
+    clearInbox,
   };
 
   return (
