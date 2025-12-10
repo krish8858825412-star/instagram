@@ -194,24 +194,28 @@ export const GlobalStateProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const updateFundRequest = (requestId: string, updates: Partial<FundRequest>, approvedAmount?: number) => {
+      let targetUser: User | undefined;
+      let amountToAdd: number | undefined;
+
       setFundRequests(prev => prev.map(req => {
           if (req.id === requestId) {
               const updatedReq = { ...req, ...updates };
               
-              // If request is approved, add to wallet
               if (updates.status === 'Approved' && req.status !== 'Approved') {
-                  const amountToAdd = approvedAmount !== undefined ? approvedAmount : updatedReq.amount;
-                  const user = users.find(u => u.name === updatedReq.user);
-                  if (user) {
-                      setWallets(prevWallets => prevWallets.map(w => 
-                          w.userId === user.id ? { ...w, balance: w.balance + amountToAdd } : w
-                      ));
-                  }
+                  amountToAdd = approvedAmount !== undefined ? approvedAmount : updatedReq.amount;
+                  targetUser = users.find(u => u.name === updatedReq.user);
               }
               return updatedReq;
           }
           return req;
-      }))
+      }));
+
+      if(targetUser && amountToAdd !== undefined) {
+        const user = targetUser;
+        setWallets(prevWallets => prevWallets.map(w => 
+            w.userId === user.id ? { ...w, balance: w.balance + (amountToAdd || 0) } : w
+        ));
+      }
   }
 
   const addHistoryItem = (item: HistoryItem) => {
