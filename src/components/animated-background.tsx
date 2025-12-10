@@ -1,15 +1,32 @@
 
 "use client";
 
+import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 
 export function AnimatedBackground() {
+  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+
+  useEffect(() => {
+    const handleMouseMove = (event: MouseEvent) => {
+      setMousePosition({ x: event.clientX, y: event.clientY });
+    };
+
+    window.addEventListener("mousemove", handleMouseMove);
+
+    return () => {
+      window.removeEventListener("mousemove", handleMouseMove);
+    };
+  }, []);
+
   return (
-    <div className="fixed inset-0 -z-10 h-full w-full bg-background">
-      <div className="relative h-full w-full bg-background">
-        <div className="absolute bottom-0 left-[-20%] right-0 top-[-10%] h-[500px] w-[500px] rounded-full bg-[radial-gradient(circle_farthest-side,rgba(255,0,182,.15),rgba(255,255,255,0))]"></div>
-        <div className="absolute bottom-0 right-[-20%] top-[-10%] h-[500px] w-[500px] rounded-full bg-[radial-gradient(circle_farthest-side,rgba(255,0,182,.15),rgba(255,255,255,0))]"></div>
-      </div>
-    </div>
+    <div
+      className={cn(
+        "pointer-events-none fixed inset-0 -z-10 transition duration-300"
+      )}
+      style={{
+        background: `radial-gradient(600px at ${mousePosition.x}px ${mousePosition.y}px, rgba(255, 0, 182, 0.20), transparent 80%)`,
+      }}
+    />
   );
 }
