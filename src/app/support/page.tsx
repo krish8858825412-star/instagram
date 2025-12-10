@@ -1,6 +1,9 @@
 
 'use client';
 
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '@/hooks/use-auth';
 import { Header } from '@/components/header';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -9,9 +12,18 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { LifeBuoy } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { SplashScreen } from '@/components/splash-screen';
 
 export default function SupportPage() {
+    const { user, loading } = useAuth();
+    const router = useRouter();
     const { toast } = useToast();
+
+    useEffect(() => {
+        if (!loading && !user) {
+        router.replace("/");
+        }
+    }, [user, loading, router]);
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -22,6 +34,10 @@ export default function SupportPage() {
         // Here you would typically handle form submission
         const form = e.target as HTMLFormElement;
         form.reset();
+    }
+
+    if (loading || !user) {
+        return <SplashScreen />;
     }
 
   return (
@@ -43,11 +59,11 @@ export default function SupportPage() {
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div className="space-y-2">
                             <Label htmlFor="name">Name</Label>
-                            <Input id="name" placeholder="Your Name" required />
+                            <Input id="name" placeholder="Your Name" required defaultValue={user?.displayName || ''} />
                         </div>
                         <div className="space-y-2">
                             <Label htmlFor="email">Email</Label>
-                            <Input id="email" type="email" placeholder="your@email.com" required />
+                            <Input id="email" type="email" placeholder="your@email.com" required defaultValue={user?.email || ''} />
                         </div>
                     </div>
                     <div className="space-y-2">

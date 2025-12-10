@@ -1,5 +1,9 @@
+
 'use client';
 
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '@/hooks/use-auth';
 import { Header } from '@/components/header';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
@@ -8,10 +12,19 @@ import { useGlobalState } from '@/contexts/state-context';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
+import { SplashScreen } from '@/components/splash-screen';
 
 export default function InboxPage() {
+  const { user, loading } = useAuth();
+  const router = useRouter();
   const { messages, clearInbox } = useGlobalState();
   const { toast } = useToast();
+
+  useEffect(() => {
+    if (!loading && !user) {
+      router.replace("/");
+    }
+  }, [user, loading, router]);
 
   const handleDeleteAll = () => {
     clearInbox();
@@ -19,6 +32,10 @@ export default function InboxPage() {
         title: "Inbox Cleared",
         description: "All your messages have been deleted."
     });
+  }
+
+  if (loading || !user) {
+    return <SplashScreen />;
   }
 
   return (

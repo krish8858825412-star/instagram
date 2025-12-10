@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { Header } from "@/components/header";
 import { Button } from "@/components/ui/button";
@@ -21,6 +21,7 @@ import { useToast } from "@/hooks/use-toast";
 import { OrderPlacedDialog } from "@/components/order-placed-dialog";
 import { useGlobalState } from "@/contexts/state-context";
 import { useAuth } from "@/hooks/use-auth";
+import { SplashScreen } from "@/components/splash-screen";
 
 const serviceDetails: { [key: string]: { title: string; unit: string; step: number } } = {
   followers: { title: "Followers", unit: "followers", step: 10 },
@@ -35,7 +36,7 @@ export default function ServiceOrderPage() {
   const router = useRouter();
   const params = useParams();
   const { toast } = useToast();
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
   const { wallet, addOrder, addHistoryItem } = useGlobalState();
   const service = Array.isArray(params.service) ? params.service[0] : params.service;
   const details = serviceDetails[service] || { title: "Service", unit: "items", step: 10 };
@@ -46,6 +47,12 @@ export default function ServiceOrderPage() {
   const [showSuccessDialog, setShowSuccessDialog] = useState(false);
   const [isPreviewing, setIsPreviewing] = useState(false);
   const [previewUrl, setPreviewUrl] = useState('');
+
+  useEffect(() => {
+    if (!loading && !user) {
+      router.replace("/");
+    }
+  }, [user, loading, router]);
 
   const price = (quantity / 10) * PRICE_PER_10_UNITS;
   const hasSufficientFunds = wallet.balance >= price;
@@ -115,6 +122,10 @@ export default function ServiceOrderPage() {
       setShowSuccessDialog(true);
     }, 2000);
   };
+
+  if (loading || !user) {
+    return <SplashScreen />;
+  }
   
   return (
     <>

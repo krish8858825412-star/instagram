@@ -1,17 +1,29 @@
+
 'use client';
 
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '@/hooks/use-auth';
 import { Header } from '@/components/header';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { DollarSign, PlusCircle } from 'lucide-react';
 import { useGlobalState } from '@/contexts/state-context';
-import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
+import { SplashScreen } from '@/components/splash-screen';
 
 export default function WalletPage() {
+  const { user, loading } = useAuth();
+  const router = useRouter();
   const { wallet, addFundRequest, addHistoryItem } = useGlobalState();
-  const { user } = useAuth();
   const { toast } = useToast();
+
+  useEffect(() => {
+    if (!loading && !user) {
+      router.replace("/");
+    }
+  }, [user, loading, router]);
+
 
   const handleAddFunds = () => {
     // This is a mock implementation. In a real app, this would open a payment dialog.
@@ -36,6 +48,10 @@ export default function WalletPage() {
         title: 'Fund Request Submitted',
         description: `Your request to add ₹${amount.toFixed(2)} has been sent for approval.`
     })
+  }
+
+  if (loading || !user) {
+    return <SplashScreen />;
   }
 
   return (

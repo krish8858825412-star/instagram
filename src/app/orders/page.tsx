@@ -1,14 +1,28 @@
+
 'use client';
 
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '@/hooks/use-auth';
 import { Header } from '@/components/header';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Package } from 'lucide-react';
 import { useGlobalState } from '@/contexts/state-context';
+import { SplashScreen } from '@/components/splash-screen';
 
 export default function OrdersPage() {
+  const { user, loading } = useAuth();
+  const router = useRouter();
   const { orders } = useGlobalState();
+
+  useEffect(() => {
+    if (!loading && !user) {
+      router.replace("/");
+    }
+  }, [user, loading, router]);
+
 
   const getStatusVariant = (status: string) => {
     switch (status) {
@@ -23,6 +37,10 @@ export default function OrdersPage() {
         return 'outline';
     }
   };
+
+  if (loading || !user) {
+    return <SplashScreen />;
+  }
 
   return (
     <div className="flex min-h-screen w-full flex-col">
