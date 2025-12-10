@@ -43,7 +43,17 @@ const chatFlow = ai.defineFlow(
     outputSchema: ChatOutputSchema,
   },
   async input => {
-    const {output} = await prompt(input);
+    const {output} = await ai.generate({
+        model: 'google/gemini-1.5-flash',
+        prompt: `You are a helpful AI assistant. Respond to the user's message.
+
+User Message: ${input.message}
+
+AI Response:`,
+        output: {
+            schema: ChatOutputSchema
+        }
+    });
     return output!;
   }
 );
