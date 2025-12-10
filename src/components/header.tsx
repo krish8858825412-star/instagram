@@ -82,9 +82,11 @@ export function Header() {
                   <span>Your Orders</span>
                 </Link>
               </DropdownMenuItem>
-              <DropdownMenuItem>
-                <LifeBuoy className="mr-2 h-4 w-4" />
-                <span>Support</span>
+              <DropdownMenuItem asChild>
+                <Link href="/support">
+                    <LifeBuoy className="mr-2 h-4 w-4" />
+                    <span>Support</span>
+                </Link>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={signOut}>

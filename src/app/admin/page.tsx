@@ -1,17 +1,11 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Check, X, MoreHorizontal } from 'lucide-react';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import {
     Select,
     SelectContent,
@@ -46,15 +40,7 @@ type AdminView = 'users' | 'orders' | 'wallets' | 'fund-requests';
 export default function AdminPage() {
   
   const [currentView, setCurrentView] = useState<AdminView>('users');
-
-  // Mock action handlers
-  const handleOrderAction = (orderId: string, action: 'approve' | 'decline') => {
-    alert(`Order ${orderId} has been ${action}d.`);
-  };
-
-  const handleFundRequestAction = (requestId: string, action: 'approve' | 'decline') => {
-    alert(`Fund Request ${requestId} has been ${action}d.`);
-  };
+  const router = useRouter();
 
   const renderContent = () => {
     switch(currentView) {
@@ -94,7 +80,7 @@ export default function AdminPage() {
                 <Card className="shadow-xl bg-transparent backdrop-blur-lg border-border/20">
                     <CardHeader>
                         <CardTitle>Order Management</CardTitle>
-                        <CardDescription>Approve or decline incoming user orders.</CardDescription>
+                        <CardDescription>Review incoming user orders.</CardDescription>
                     </CardHeader>
                     <CardContent>
                         <Table>
@@ -106,38 +92,18 @@ export default function AdminPage() {
                             <TableHead>Quantity</TableHead>
                             <TableHead>Price</TableHead>
                             <TableHead>Status</TableHead>
-                            <TableHead className="text-right">Actions</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
                             {orders.map((order) => (
-                            <TableRow key={order.id}>
+                            <TableRow key={order.id} onClick={() => router.push(`/admin/orders/${order.id}`)} className="cursor-pointer">
                                 <TableCell>{order.id}</TableCell>
                                 <TableCell>{order.user}</TableCell>
                                 <TableCell>{order.service}</TableCell>
                                 <TableCell>{order.quantity}</TableCell>
                                 <TableCell>₹{order.price.toFixed(2)}</TableCell>
                                 <TableCell>
-                                <Badge variant="outline">{order.status}</Badge>
-                                </TableCell>
-                                <TableCell className="text-right">
-                                    <DropdownMenu>
-                                        <DropdownMenuTrigger asChild>
-                                            <Button variant="ghost" size="icon">
-                                                <MoreHorizontal className="h-4 w-4" />
-                                            </Button>
-                                        </DropdownMenuTrigger>
-                                        <DropdownMenuContent align="end">
-                                            <DropdownMenuItem onClick={() => handleOrderAction(order.id, 'approve')}>
-                                                <Check className="mr-2 h-4 w-4" />
-                                                Approve
-                                            </DropdownMenuItem>
-                                            <DropdownMenuItem className="text-red-500" onClick={() => handleOrderAction(order.id, 'decline')}>
-                                                <X className="mr-2 h-4 w-4" />
-                                                Decline
-                                            </DropdownMenuItem>
-                                        </DropdownMenuContent>
-                                    </DropdownMenu>
+                                    <Badge variant="outline">{order.status}</Badge>
                                 </TableCell>
                             </TableRow>
                             ))}
@@ -180,7 +146,7 @@ export default function AdminPage() {
                 <Card className="shadow-xl bg-transparent backdrop-blur-lg border-border/20">
                     <CardHeader>
                         <CardTitle>Fund Requests</CardTitle>
-                        <CardDescription>Approve or decline user requests to add funds to their wallet.</CardDescription>
+                        <CardDescription>Approve or decline user requests to add funds.</CardDescription>
                     </CardHeader>
                     <CardContent>
                         <Table>
@@ -191,37 +157,17 @@ export default function AdminPage() {
                                     <TableHead>Amount</TableHead>
                                     <TableHead>Date</TableHead>
                                     <TableHead>Status</TableHead>
-                                    <TableHead className="text-right">Actions</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
                                 {fundRequests.map((request) => (
-                                    <TableRow key={request.id}>
+                                    <TableRow key={request.id} onClick={() => router.push(`/admin/fund-requests/${request.id}`)} className="cursor-pointer">
                                         <TableCell>{request.id}</TableCell>
                                         <TableCell>{request.user}</TableCell>
                                         <TableCell>₹{request.amount.toFixed(2)}</TableCell>
                                         <TableCell>{request.date}</TableCell>
                                         <TableCell>
                                             <Badge variant="outline">{request.status}</Badge>
-                                        </TableCell>
-                                        <TableCell className="text-right">
-                                        <DropdownMenu>
-                                            <DropdownMenuTrigger asChild>
-                                                <Button variant="ghost" size="icon">
-                                                    <MoreHorizontal className="h-4 w-4" />
-                                                </Button>
-                                            </DropdownMenuTrigger>
-                                            <DropdownMenuContent align="end">
-                                                <DropdownMenuItem onClick={() => handleFundRequestAction(request.id, 'approve')}>
-                                                    <Check className="mr-2 h-4 w-4" />
-                                                    Approve
-                                                </DropdownMenuItem>
-                                                <DropdownMenuItem className="text-red-500" onClick={() => handleFundRequestAction(request.id, 'decline')}>
-                                                    <X className="mr-2 h-4 w-4" />
-                                                    Decline
-                                                </DropdownMenuItem>
-                                            </DropdownMenuContent>
-                                        </DropdownMenu>
                                         </TableCell>
                                     </TableRow>
                                 ))}
