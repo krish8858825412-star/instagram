@@ -9,46 +9,20 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { DollarSign, PlusCircle } from 'lucide-react';
 import { useGlobalState } from '@/contexts/state-context';
-import { useToast } from '@/hooks/use-toast';
 import { SplashScreen } from '@/components/splash-screen';
+import Link from 'next/link';
 
 export default function WalletPage() {
   const { user, loading } = useAuth();
   const router = useRouter();
-  const { wallet, addFundRequest, addHistoryItem } = useGlobalState();
-  const { toast } = useToast();
-
+  const { wallet } = useGlobalState();
+  
   useEffect(() => {
     if (!loading && !user) {
       router.replace("/");
     }
   }, [user, loading, router]);
 
-
-  const handleAddFunds = () => {
-    // This is a mock implementation. In a real app, this would open a payment dialog.
-    const amount = 500; // Mock amount
-    const newRequest = {
-        id: `FUND${String(Date.now()).slice(-4)}`,
-        user: user?.displayName || 'Unknown User',
-        amount,
-        date: new Date().toISOString(),
-        status: 'Pending',
-        paymentMethod: 'UPI',
-        transactionId: `T${Date.now()}`
-    };
-    addFundRequest(newRequest);
-    addHistoryItem({
-        action: 'Created Fund Request',
-        target: newRequest.id,
-        user: newRequest.user,
-        date: new Date().toISOString(),
-    });
-    toast({
-        title: 'Fund Request Submitted',
-        description: `Your request to add ₹${amount.toFixed(2)} has been sent for approval.`
-    })
-  }
 
   if (loading || !user) {
     return <SplashScreen />;
@@ -72,9 +46,11 @@ export default function WalletPage() {
                 <div className="text-5xl font-extrabold tracking-tighter text-primary">
                     ₹{wallet.balance.toFixed(2)}
                 </div>
-                <Button size="lg" className="w-full sm:w-auto" onClick={handleAddFunds}>
-                    <PlusCircle className="mr-2 h-5 w-5" />
-                    Add Funds (Demo)
+                <Button size="lg" className="w-full sm:w-auto" asChild>
+                    <Link href="/wallet/add-funds">
+                        <PlusCircle className="mr-2 h-5 w-5" />
+                        Add Funds
+                    </Link>
                 </Button>
                 <div className="pt-6">
                     <h3 className="text-xl font-semibold mb-4">Transaction History</h3>
