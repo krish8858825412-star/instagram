@@ -10,23 +10,12 @@ const patterns = (color: string) => [
     backgroundSize: "2rem 2rem",
     opacity: 0.3,
   },
-  // Grid
+  // Another dot-like pattern, slightly different
   {
-    backgroundImage: `linear-gradient(${color} 1px, transparent 1px), linear-gradient(to right, ${color} 1px, transparent 1px)`,
-    backgroundSize: "2rem 2rem",
-    opacity: 0.2,
+    backgroundImage: `radial-gradient(${color} 1px, transparent 1px)`,
+    backgroundSize: "1.5rem 1.5rem",
+    opacity: 0.25,
   },
-  // Diagonal Lines
-  {
-    backgroundImage: `repeating-linear-gradient(45deg, ${color}, ${color} 1px, transparent 1px, transparent 2rem)`,
-    opacity: 0.2,
-  },
-  // Squares
-  {
-    backgroundImage: `linear-gradient(45deg, ${color} 25%, transparent 25%), linear-gradient(-45deg, ${color} 25%, transparent 25%), linear-gradient(45deg, transparent 75%, ${color} 75%), linear-gradient(-45deg, transparent 75%, ${color} 75%)`,
-    backgroundSize: '2rem 2rem',
-    opacity: 0.15,
-  }
 ];
 
 export function AnimatedBackground() {
