@@ -79,6 +79,10 @@
   .animate-move {
     animation: move 30s linear infinite, breathing 5s ease-in-out infinite alternate;
   }
+
+  .animation-focus-in {
+    animation: focus-in 1.5s ease-out forwards;
+  }
 }
 
 @keyframes breathing {
@@ -88,6 +92,17 @@
   }
   50% {
     transform: scale(1.05);
+    opacity: 1;
+  }
+}
+
+@keyframes focus-in {
+  0% {
+    filter: blur(12px);
+    opacity: 0;
+  }
+  100% {
+    filter: blur(0px);
     opacity: 1;
   }
 }
