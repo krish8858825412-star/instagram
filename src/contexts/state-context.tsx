@@ -164,12 +164,9 @@ export const GlobalStateProvider = ({ children }: { children: ReactNode }) => {
 
   const addOrder = (order: Order) => {
     setOrders(prev => [...prev, order]);
-    // Balance is deducted on approval
   };
 
   const updateOrder = (orderId: string, updates: Partial<Order>) => {
-    let targetUsername = '';
-    
     setOrders(prev => prev.map(order => {
       if (order.id === orderId) {
         const updatedOrder = { ...order, ...updates };
@@ -194,28 +191,24 @@ export const GlobalStateProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const updateFundRequest = (requestId: string, updates: Partial<FundRequest>, approvedAmount?: number) => {
-      let targetUser: User | undefined;
-      let amountToAdd: number | undefined;
-
       setFundRequests(prev => prev.map(req => {
           if (req.id === requestId) {
               const updatedReq = { ...req, ...updates };
               
               if (updates.status === 'Approved' && req.status !== 'Approved') {
-                  amountToAdd = approvedAmount !== undefined ? approvedAmount : updatedReq.amount;
-                  targetUser = users.find(u => u.name === updatedReq.user);
+                  const amountToAdd = approvedAmount !== undefined ? approvedAmount : updatedReq.amount;
+                  const targetUser = users.find(u => u.name === updatedReq.user);
+                  
+                  if(targetUser && amountToAdd > 0) {
+                      setWallets(prevWallets => prevWallets.map(w => 
+                          w.userId === targetUser.id ? { ...w, balance: w.balance + amountToAdd } : w
+                      ));
+                  }
               }
               return updatedReq;
           }
           return req;
       }));
-
-      if(targetUser && amountToAdd !== undefined) {
-        const user = targetUser;
-        setWallets(prevWallets => prevWallets.map(w => 
-            w.userId === user.id ? { ...w, balance: w.balance + (amountToAdd || 0) } : w
-        ));
-      }
   }
 
   const addHistoryItem = (item: HistoryItem) => {
