@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ArrowLeft, CheckCircle, ClipboardPaste, Loader2, Wallet, XCircle } from "lucide-react";
+import { ArrowLeft, CheckCircle, ClipboardPaste, Info, Loader2, Wallet, XCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { OrderPlacedDialog } from "@/components/order-placed-dialog";
 import { useGlobalState } from "@/contexts/state-context";
@@ -56,6 +56,8 @@ export default function ServiceOrderPage() {
   const todaysOrders = getTodaysOrderCount(details.title);
   const dailyLimit = serviceLimits[details.title.toLowerCase() as keyof typeof serviceLimits] || 0;
   const isLimitReached = dailyLimit > 0 && todaysOrders >= dailyLimit;
+  const remainingOrders = dailyLimit > 0 ? dailyLimit - todaysOrders : Infinity;
+
 
   const price = (quantity / 10) * PRICE_PER_10_UNITS;
   const hasSufficientFunds = wallet.balance >= price;
@@ -160,12 +162,20 @@ export default function ServiceOrderPage() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
-                 {isLimitReached && (
+                 {isLimitReached ? (
                     <Alert variant="destructive">
                       <XCircle className="h-4 w-4" />
                       <AlertTitle>Daily Limit Reached</AlertTitle>
                       <AlertDescription>
                         The maximum number of orders for {details.title} for today has been reached. Please check back tomorrow.
+                      </AlertDescription>
+                    </Alert>
+                  ) : dailyLimit > 0 && (
+                     <Alert>
+                      <Info className="h-4 w-4" />
+                      <AlertTitle>Daily Orders Remaining</AlertTitle>
+                      <AlertDescription>
+                        You can place {remainingOrders.toLocaleString()} more order(s) for {details.title} today. ({todaysOrders}/{dailyLimit} used).
                       </AlertDescription>
                     </Alert>
                   )}
