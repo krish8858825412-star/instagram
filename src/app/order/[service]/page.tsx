@@ -86,6 +86,8 @@ export default function ServiceOrderPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!user) return;
+    
     if (isLimitReached) {
       toast({
         variant: "destructive",
@@ -117,6 +119,7 @@ export default function ServiceOrderPage() {
       const newOrder = {
         id: `ORD${String(Date.now()).slice(-4)}`,
         user: user?.displayName || 'Unknown User',
+        userId: user.uid,
         service: details.title,
         link,
         quantity,

@@ -34,6 +34,7 @@ export default function AddFundsPage() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if(!user) return;
     if(!amount || !transactionId) {
         toast({
             variant: "destructive",
@@ -49,6 +50,7 @@ export default function AddFundsPage() {
         const newRequest = {
             id: `FUND${String(Date.now()).slice(-4)}`,
             user: user?.displayName || 'Unknown User',
+            userId: user.uid,
             amount: parseFloat(amount),
             date: new Date().toISOString(),
             status: 'Pending' as 'Pending' | 'Approved' | 'Declined',

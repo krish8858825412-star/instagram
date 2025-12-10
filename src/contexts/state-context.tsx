@@ -8,6 +8,7 @@ import { useAuth } from '@/hooks/use-auth';
 interface Order {
   id: string;
   user: string;
+  userId: string;
   service: string;
   link: string;
   quantity: number;
@@ -19,6 +20,7 @@ interface Order {
 interface FundRequest {
     id: string;
     user: string;
+    userId: string;
     amount: number;
     date: string;
     status: 'Pending' | 'Approved' | 'Declined';
@@ -42,7 +44,7 @@ interface User {
 interface HistoryItem {
     action: string;
     target: string;
-    user: string;
+    user: string; // Can be user name or user id
     date: string;
 }
 
@@ -72,6 +74,7 @@ interface GlobalState {
   messages: Message[];
   qrCodeUrl: string;
   serviceLimits: ServiceLimits;
+  getUserData: (userId: string) => { user: User | undefined; wallet: Wallet | undefined; userOrders: Order[]; userFundRequests: FundRequest[]; userHistory: HistoryItem[] };
   getTodaysOrderCount: (service: string) => number;
   addOrder: (order: Order) => void;
   updateOrder: (orderId: string, updates: Partial<Order>) => void;
@@ -149,7 +152,7 @@ export const GlobalStateProvider = ({ children }: { children: ReactNode }) => {
          addHistoryItem({
           action: 'User Registered',
           target: newUser.id,
-          user: 'System',
+          user: newUser.name,
           date: new Date().toISOString(),
         });
         
@@ -180,27 +183,21 @@ export const GlobalStateProvider = ({ children }: { children: ReactNode }) => {
 
   const addOrder = (order: Order) => {
     // Deduct price from wallet immediately on order creation
-    const userToUpdate = users.find(u => u.name === order.user);
-    if(userToUpdate) {
-        setWallets(prevWallets => prevWallets.map(w => 
-            w.userId === userToUpdate.id ? { ...w, balance: w.balance - order.price } : w
-        ));
-    }
-    setOrders(prev => [...prev, order]);
+    setWallets(prevWallets => prevWallets.map(w => 
+        w.userId === order.userId ? { ...w, balance: w.balance - order.price } : w
+    ));
+    setOrders(prev => [order, ...prev]);
   };
 
   const updateOrder = (orderId: string, updates: Partial<Order>) => {
     const originalOrder = orders.find(o => o.id === orderId);
     if (!originalOrder) return;
 
-    // If order is being declined, and was not already declined, refund the user
+    // If order is being declined, and was not previously declined, refund the user
     if (updates.status === 'Declined' && originalOrder.status !== 'Declined') {
-        const userToUpdate = users.find(u => u.name === originalOrder.user);
-        if (userToUpdate) {
-            setWallets(prevWallets => prevWallets.map(w =>
-            w.userId === userToUpdate.id ? { ...w, balance: w.balance + originalOrder.price } : w
-            ));
-        }
+        setWallets(prevWallets => prevWallets.map(w =>
+           w.userId === originalOrder.userId ? { ...w, balance: w.balance + originalOrder.price } : w
+        ));
     }
     
     setOrders(prevOrders => prevOrders.map(order => 
@@ -209,32 +206,30 @@ export const GlobalStateProvider = ({ children }: { children: ReactNode }) => {
   };
   
   const addFundRequest = (request: FundRequest) => {
-      setFundRequests(prev => [...prev, request]);
+      setFundRequests(prev => [request, ...prev]);
   };
 
   const updateFundRequest = (requestId: string, updates: Partial<FundRequest>, approvedAmount?: number) => {
-      const originalRequest = fundRequests.find(req => req.id === requestId);
-      if (!originalRequest) return;
-
-      const updatedRequest = { ...originalRequest, ...updates };
-
-      // Only process wallet change if status is changing to "Approved"
-      if (updates.status === 'Approved' && originalRequest.status !== 'Approved') {
-          const amountToAdd = approvedAmount !== undefined ? approvedAmount : originalRequest.amount;
-          const targetUser = users.find(u => u.name === originalRequest.user);
-          
-          if (targetUser && amountToAdd > 0) {
-              setWallets(prevWallets => 
-                  prevWallets.map(w => 
-                      w.userId === targetUser.id ? { ...w, balance: w.balance + amountToAdd } : w
-                  )
-              );
-          }
+    const originalRequest = fundRequests.find(req => req.id === requestId);
+    if (!originalRequest) return;
+  
+    // Only process wallet change if status is changing to "Approved"
+    if (updates.status === 'Approved' && originalRequest.status !== 'Approved') {
+      const amountToAdd = approvedAmount !== undefined ? approvedAmount : originalRequest.amount;
+      if (amountToAdd > 0) {
+        setWallets(prevWallets =>
+          prevWallets.map(w =>
+            w.userId === originalRequest.userId ? { ...w, balance: w.balance + amountToAdd } : w
+          )
+        );
       }
-      
-      // Update the request list after processing logic
-      setFundRequests(prev => prev.map(req => req.id === requestId ? updatedRequest : req));
-  }
+    }
+  
+    // Update the request in the state
+    setFundRequests(prev => prev.map(req => 
+        req.id === requestId ? { ...req, ...updates, amount: approvedAmount !== undefined ? approvedAmount : req.amount } : req
+    ));
+  };
 
   const addHistoryItem = (item: HistoryItem) => {
     setHistory(prev => [item, ...prev]);
@@ -267,15 +262,26 @@ export const GlobalStateProvider = ({ children }: { children: ReactNode }) => {
         date: new Date().toISOString(),
     });
   }
-
+  
   const getTodaysOrderCount = (service: string) => {
+    if(!service) return 0;
     const today = new Date().toISOString().split('T')[0];
     return orders.filter(o => o.service.toLowerCase() === service.toLowerCase() && o.date.startsWith(today)).length;
   }
+  
+  const getUserData = (userId: string) => {
+    const user = users.find(u => u.id === userId);
+    const wallet = wallets.find(w => w.userId === userId);
+    const userOrders = orders.filter(o => o.userId === userId).sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    const userFundRequests = fundRequests.filter(fr => fr.userId === userId).sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    const userHistory = history.filter(h => h.user === user?.name || h.user === userId).sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
+    return { user, wallet, userOrders, userFundRequests, userHistory };
+  };
 
   const currentUserWallet = wallets.find(w => w.userId === authUser?.uid) || { userId: '', name: '', balance: 0 };
   
-  const userMessages = messages.filter(m => m.recipient === 'all' || m.recipient === authUser?.uid);
+  const userMessages = authUser ? messages.filter(m => m.recipient === 'all' || m.recipient === authUser?.uid) : [];
 
   const value = {
     users,
@@ -287,6 +293,7 @@ export const GlobalStateProvider = ({ children }: { children: ReactNode }) => {
     messages: userMessages,
     qrCodeUrl,
     serviceLimits,
+    getUserData,
     getTodaysOrderCount,
     addOrder,
     updateOrder,

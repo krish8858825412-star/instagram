@@ -7,14 +7,14 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Users, ShoppingCart, Wallet, Banknote, History, MessageSquare, Settings } from 'lucide-react';
+import { Users, ShoppingCart, Wallet, Banknote, History, MessageSquare, Settings, LifeBuoy } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { useGlobalState } from '@/contexts/state-context';
 
-type AdminView = 'users' | 'orders' | 'wallets' | 'fund-requests' | 'all-history' | 'inbox' | 'settings';
+type AdminView = 'users' | 'orders' | 'wallets' | 'fund-requests' | 'all-history' | 'inbox' | 'settings' | 'support';
 
 export default function AdminPage() {
   const [currentView, setCurrentView] = useState<AdminView>('orders');
@@ -39,6 +39,7 @@ export default function AdminPage() {
     'all-history': { title: 'All History', icon: History, description: 'View all system actions', data: history, count: history.length },
     inbox: { title: 'Inbox', icon: MessageSquare, description: 'Send messages to users', data: [], count: 0 },
     settings: { title: 'Settings', icon: Settings, description: 'Configure application', data: [], count: 0 },
+    support: { title: 'Support', icon: LifeBuoy, description: 'View support tickets', data: [], count: 0 },
   };
 
   const handleMessageSubmit = (e: React.FormEvent) => {
@@ -83,7 +84,7 @@ export default function AdminPage() {
                 <Card className="shadow-xl bg-card border-border/20">
                     <CardHeader>
                         <CardTitle>User List</CardTitle>
-                        <CardDescription>Manage all registered users.</CardDescription>
+                        <CardDescription>Manage all registered users. Click on a user to view their details.</CardDescription>
                     </CardHeader>
                     <CardContent>
                         <Table>
@@ -97,7 +98,11 @@ export default function AdminPage() {
                         </TableHeader>
                         <TableBody>
                             {users.map((user) => (
-                            <TableRow key={user.id}>
+                            <TableRow 
+                                key={user.id} 
+                                onClick={() => router.push(`/admin/users/${user.id}`)}
+                                className="cursor-pointer"
+                            >
                                 <TableCell>{user.id}</TableCell>
                                 <TableCell>{user.name}</TableCell>
                                 <TableCell>{user.email}</TableCell>
@@ -327,6 +332,21 @@ export default function AdminPage() {
                    </CardContent>
                </Card>
            );
+        case 'support':
+             return (
+                <Card className="shadow-xl bg-card border-border/20">
+                    <CardHeader>
+                        <CardTitle>Support Center</CardTitle>
+                        <CardDescription>Manage user support tickets here. This feature is coming soon.</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="flex flex-col items-center justify-center h-64 border-2 border-dashed rounded-lg bg-muted/20">
+                            <LifeBuoy className="h-16 w-16 text-muted-foreground/50" />
+                            <p className="mt-4 text-muted-foreground">Support ticket system is under construction.</p>
+                        </div>
+                    </CardContent>
+                </Card>
+            );
         default:
             return null;
     }
@@ -338,14 +358,20 @@ export default function AdminPage() {
         <h1 className="text-xl font-bold">Admin Panel</h1>
       </header>
       <main className="flex flex-1 flex-col gap-4 p-4 md:gap-8 md:p-8">
-        <div className="grid gap-4 md:grid-cols-2 md:gap-8 lg:grid-cols-4 xl:grid-cols-7">
+        <div className="grid gap-4 md:grid-cols-2 md:gap-8 lg:grid-cols-4 xl:grid-cols-8">
             {(Object.keys(viewConfig) as AdminView[]).map((view) => {
                 const Icon = viewConfig[view].icon;
                 const isPendingView = view === 'orders' || view === 'fund-requests';
-                const count = view === 'settings' || view === 'inbox' 
-                    ? viewConfig[view].count 
-                    : isPendingView ? viewConfig[view].count : viewConfig[view].data.length;
+                let count: number;
 
+                if (view === 'settings' || view === 'inbox' || view === 'support') {
+                    count = viewConfig[view].count;
+                } else if (isPendingView) {
+                    count = viewConfig[view].count;
+                } else {
+                    count = viewConfig[view].data.length;
+                }
+                
                 return (
                     <Card 
                         key={view}
