@@ -11,18 +11,19 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { PlaceHolderImages } from "@/lib/placeholder-images";
-import { LifeBuoy, LogOut, User as UserIcon, Moon, Sun } from "lucide-react";
+import { LifeBuoy, LogOut, Moon, Sun, Wallet, Inbox, Package } from "lucide-react";
 import { LogoIcon } from "./icons";
 import { useTheme } from "next-themes";
+import Link from "next/link";
 
 export function Header() {
   const { user, signOut } = useAuth();
   const { theme, setTheme } = useTheme();
-  const userAvatar = PlaceHolderImages.find((img) => img.id === "user-avatar");
 
   const getInitials = (email: string | null | undefined) => {
     if (!email) return "U";
+    const name = user?.displayName;
+    if(name) return name[0].toUpperCase();
     return email[0].toUpperCase();
   };
 
@@ -44,11 +45,14 @@ export function Header() {
             <Moon className="absolute h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
             <span className="sr-only">Toggle theme</span>
           </Button>
+          <Button variant="ghost" onClick={signOut}>
+            <LogOut className="mr-2 h-4 w-4" />
+            <span>Log out</span>
+          </Button>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="secondary" size="icon" className="rounded-full">
                 <Avatar>
-                  <AvatarImage src={user?.photoURL || userAvatar?.imageUrl} alt={user?.displayName || "User"} data-ai-hint={userAvatar?.imageHint} />
                   <AvatarFallback>{getInitials(user?.email)}</AvatarFallback>
                 </Avatar>
                 <span className="sr-only">Toggle user menu</span>
@@ -64,9 +68,23 @@ export function Header() {
                 </div>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem>
-                <UserIcon className="mr-2 h-4 w-4" />
-                <span>Profile</span>
+              <DropdownMenuItem asChild>
+                <Link href="/wallet">
+                  <Wallet className="mr-2 h-4 w-4" />
+                  <span>Wallet</span>
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link href="/inbox">
+                  <Inbox className="mr-2 h-4 w-4" />
+                  <span>Inbox</span>
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link href="/orders">
+                  <Package className="mr-2 h-4 w-4" />
+                  <span>Your Orders</span>
+                </Link>
               </DropdownMenuItem>
               <DropdownMenuItem>
                 <LifeBuoy className="mr-2 h-4 w-4" />
