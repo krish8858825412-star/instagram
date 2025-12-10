@@ -3,6 +3,7 @@ import './globals.css';
 import { Toaster } from '@/components/ui/toaster';
 import { AppProvider } from '@/components/app-provider';
 import { AnimatedBackground } from '@/components/animated-background';
+import { ChatBubble } from '@/components/chat-bubble';
 
 export const metadata: Metadata = {
   title: 'Instagram',
@@ -27,6 +28,7 @@ export default function RootLayout({
           <div className="relative z-10">
             {children}
           </div>
+          <ChatBubble />
         </AppProvider>
         <Toaster />
       </body>
