@@ -66,10 +66,6 @@
   .animation-breathing {
     animation: breathing 3s ease-in-out infinite;
   }
-  .bg-dot-pattern {
-    background-image: radial-gradient(circle at 1px 1px, hsl(var(--muted-foreground) / 0.5) 1px, transparent 0);
-    background-size: 2rem 2rem;
-  }
   
   @keyframes move {
     0% {
