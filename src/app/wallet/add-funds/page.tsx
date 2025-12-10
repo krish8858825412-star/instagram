@@ -93,7 +93,7 @@ export default function AddFundsPage() {
             </CardHeader>
             <CardContent className="space-y-6">
                 <div className="flex justify-center p-4 bg-muted/50 rounded-lg">
-                    <Image src="/upi-qr-code.png" alt="UPI QR Code" width={250} height={250} className='rounded-md border-4 border-white shadow-lg' />
+                    <Image src="https://placehold.co/250x250/000000/FFFFFF?text=Scan+Me" alt="UPI QR Code" width={250} height={250} className='rounded-md border-4 border-white shadow-lg' data-ai-hint="qr code" />
                 </div>
                 
                 <Alert>
