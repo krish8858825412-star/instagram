@@ -39,7 +39,7 @@ export default function HomePage() {
         </div>
         <Separator />
         <div className="grid gap-4 md:gap-8">
-          <Card className="shadow-xl bg-transparent backdrop-blur-lg border-border/20 relative overflow-hidden">
+          <Card className="shadow-xl bg-card/10 backdrop-blur-lg border-border/20 relative overflow-hidden">
             <AnimatedBackground />
             <div className="relative z-10">
               <CardHeader>

@@ -185,7 +185,7 @@ export default function AuthPage() {
             Instagram
           </h1>
         </div>
-        <Card className="w-full max-w-md bg-transparent backdrop-blur-lg border-border/20 shadow-xl">
+        <Card className="w-full max-w-md bg-card/10 backdrop-blur-lg border-border/20 shadow-xl">
           <CardHeader className="text-center">
             <CardTitle className="text-2xl font-bold tracking-tight">
               {isAdminMode ? "Admin Access" : isSigningUp ? "Create an Account" : "Welcome Back"}
