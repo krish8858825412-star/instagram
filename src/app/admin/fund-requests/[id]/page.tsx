@@ -10,6 +10,8 @@ import { useToast } from '@/hooks/use-toast';
 import { Separator } from '@/components/ui/separator';
 import { useGlobalState } from '@/contexts/state-context';
 import { useEffect, useState } from 'react';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 
 export default function FundRequestDetailPage() {
   const router = useRouter();
@@ -19,18 +21,37 @@ export default function FundRequestDetailPage() {
   const id = params.id as string;
 
   const [request, setRequest] = useState<any>(null);
+  const [customAmount, setCustomAmount] = useState<string>('');
 
   useEffect(() => {
     const foundRequest = fundRequests.find((r) => r.id === id);
     if (foundRequest) {
       setRequest(foundRequest);
+      setCustomAmount(String(foundRequest.amount));
     }
   }, [id, fundRequests]);
 
 
   const handleAction = (action: 'Approved' | 'Declined') => {
     if (!request) return;
-    updateFundRequest(id, { status: action });
+    
+    let approvedAmount: number | undefined = undefined;
+    if (action === 'Approved') {
+        const customAmountNumber = parseFloat(customAmount);
+        if(!isNaN(customAmountNumber) && customAmountNumber > 0) {
+            approvedAmount = customAmountNumber;
+        } else {
+             toast({
+                variant: 'destructive',
+                title: 'Invalid Amount',
+                description: 'Please enter a valid positive number for the amount.',
+            });
+            return;
+        }
+    }
+
+    updateFundRequest(id, { status: action }, approvedAmount);
+
      addHistoryItem({
       action: `${action} Fund Request`,
       target: id,
@@ -70,28 +91,48 @@ export default function FundRequestDetailPage() {
                 Requested on {new Date(request.date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
               </CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="space-y-4">
                 <Table>
                     <TableBody>
                         <TableRow><TableCell className="font-semibold">User</TableCell><TableCell>{request.user}</TableCell></TableRow>
                         <TableRow><TableCell className="font-semibold">Email</TableCell><TableCell>{/* Add email if available */}</TableCell></TableRow>
-                        <TableRow><TableCell className="font-semibold">Amount</TableCell><TableCell>₹{request.amount.toFixed(2)}</TableCell></TableRow>
+                        <TableRow><TableCell className="font-semibold">Requested Amount</TableCell><TableCell>₹{request.amount.toFixed(2)}</TableCell></TableRow>
                         <TableRow><TableCell className="font-semibold">Payment Method</TableCell><TableCell>{request.paymentMethod || 'N/A'}</TableCell></TableRow>
                         <TableRow><TableCell className="font-semibold">Transaction ID</TableCell><TableCell>{request.transactionId || 'N/A'}</TableCell></TableRow>
                          <TableRow><TableCell className="font-semibold">Status</TableCell><TableCell>{request.status}</TableCell></TableRow>
                     </TableBody>
                 </Table>
+                
+                {request.status === 'Pending' && (
+                    <div className="space-y-2 pt-4 border-t">
+                        <Label htmlFor="customAmount">Custom Approval Amount (₹)</Label>
+                        <Input
+                            id="customAmount"
+                            type="number"
+                            value={customAmount}
+                            onChange={(e) => setCustomAmount(e.target.value)}
+                            placeholder="Enter amount to approve"
+                        />
+                         <p className="text-xs text-muted-foreground">
+                            Leave this field with the requested amount or change it to approve a different amount.
+                        </p>
+                    </div>
+                )}
             </CardContent>
             <Separator />
             <CardFooter className="flex justify-end gap-2 p-4">
-                <Button variant="destructive" onClick={() => handleAction('Declined')}>
-                    <X className="mr-2 h-4 w-4" />
-                    Decline
-                </Button>
-                <Button onClick={() => handleAction('Approved')}>
-                    <Check className="mr-2 h-4 w-4" />
-                    Approve
-                </Button>
+               {request.status === 'Pending' && (
+                 <>
+                    <Button variant="destructive" onClick={() => handleAction('Declined')}>
+                        <X className="mr-2 h-4 w-4" />
+                        Decline
+                    </Button>
+                    <Button onClick={() => handleAction('Approved')}>
+                        <Check className="mr-2 h-4 w-4" />
+                        Approve
+                    </Button>
+                 </>
+               )}
             </CardFooter>
           </Card>
         </div>

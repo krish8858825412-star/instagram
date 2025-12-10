@@ -67,7 +67,7 @@ interface GlobalState {
   addOrder: (order: Order) => void;
   updateOrder: (orderId: string, updates: Partial<Order>) => void;
   addFundRequest: (request: FundRequest) => void;
-  updateFundRequest: (requestId: string, updates: Partial<FundRequest>) => void;
+  updateFundRequest: (requestId: string, updates: Partial<FundRequest>, approvedAmount?: number) => void;
   addHistoryItem: (item: HistoryItem) => void;
   sendMessageToAll: (subject: string, message: string) => void;
   clearInbox: () => void;
@@ -115,7 +115,7 @@ export const GlobalStateProvider = ({ children }: { children: ReactNode }) => {
   const [fundRequests, setFundRequests] = useLocalStorage<FundRequest[]>('app_fund_requests', []);
   const [history, setHistory] = useLocalStorage<HistoryItem[]>('app_history', []);
   const [messages, setMessages] = useLocalStorage<Message[]>('app_messages', []);
-  const [qrCodeUrl, setQrCodeUrl] = useLocalStorage<string>('app_qr_code_url', '');
+  const [qrCodeUrl, setQrCodeUrl] = useLocalStorage<string>('app_qr_code_url', 'https://i.ibb.co/QvH6T1Yb/IMG-20251210-165618.jpg');
 
   // Effect to initialize or update user data when authUser changes
   useEffect(() => {
@@ -164,7 +164,7 @@ export const GlobalStateProvider = ({ children }: { children: ReactNode }) => {
 
   const addOrder = (order: Order) => {
     setOrders(prev => [...prev, order]);
-    // No balance deduction here, only on approval
+    // Balance is deducted on approval
   };
 
   const updateOrder = (orderId: string, updates: Partial<Order>) => {
@@ -173,10 +173,15 @@ export const GlobalStateProvider = ({ children }: { children: ReactNode }) => {
     setOrders(prev => prev.map(order => {
       if (order.id === orderId) {
         const updatedOrder = { ...order, ...updates };
-        targetUsername = updatedOrder.user;
+        
         // If order is completed, deduct from wallet
         if (updates.status === 'Completed' && order.status !== 'Completed') {
-            updateWalletBalance(updatedOrder.price * -1, targetUsername);
+            const user = users.find(u => u.name === updatedOrder.user);
+            if (user) {
+                setWallets(prevWallets => prevWallets.map(w => 
+                    w.userId === user.id ? { ...w, balance: w.balance - updatedOrder.price } : w
+                ));
+            }
         }
         return updatedOrder;
       }
@@ -188,15 +193,20 @@ export const GlobalStateProvider = ({ children }: { children: ReactNode }) => {
       setFundRequests(prev => [...prev, request]);
   };
 
-  const updateFundRequest = (requestId: string, updates: Partial<FundRequest>) => {
-    let targetUsername = '';
+  const updateFundRequest = (requestId: string, updates: Partial<FundRequest>, approvedAmount?: number) => {
       setFundRequests(prev => prev.map(req => {
           if (req.id === requestId) {
               const updatedReq = { ...req, ...updates };
-              targetUsername = updatedReq.user;
+              
               // If request is approved, add to wallet
               if (updates.status === 'Approved' && req.status !== 'Approved') {
-                  updateWalletBalance(updatedReq.amount, targetUsername);
+                  const amountToAdd = approvedAmount !== undefined ? approvedAmount : updatedReq.amount;
+                  const user = users.find(u => u.name === updatedReq.user);
+                  if (user) {
+                      setWallets(prevWallets => prevWallets.map(w => 
+                          w.userId === user.id ? { ...w, balance: w.balance + amountToAdd } : w
+                      ));
+                  }
               }
               return updatedReq;
           }
@@ -208,15 +218,6 @@ export const GlobalStateProvider = ({ children }: { children: ReactNode }) => {
     setHistory(prev => [item, ...prev]);
   }
 
-  const updateWalletBalance = (amount: number, username: string) => {
-      const targetUser = users.find(u => u.name === username);
-      if (!targetUser) return;
-      
-      setWallets(prev => prev.map(w => 
-        w.userId === targetUser.id ? { ...w, balance: w.balance + amount } : w
-      ));
-  }
-  
   const sendMessageToAll = (subject: string, message: string) => {
     const newMessage: Message = {
       id: `msg-${Date.now()}`,
