@@ -54,6 +54,13 @@ interface Message {
     date: string;
 }
 
+interface ServiceLimits {
+  followers: number;
+  likes: number;
+  comments: number;
+  views: number;
+}
+
 // Define the shape of the context state
 interface GlobalState {
   users: User[];
@@ -64,6 +71,8 @@ interface GlobalState {
   history: HistoryItem[];
   messages: Message[];
   qrCodeUrl: string;
+  serviceLimits: ServiceLimits;
+  getTodaysOrderCount: (service: string) => number;
   addOrder: (order: Order) => void;
   updateOrder: (orderId: string, updates: Partial<Order>) => void;
   addFundRequest: (request: FundRequest) => void;
@@ -72,6 +81,7 @@ interface GlobalState {
   sendMessageToAll: (subject: string, message: string) => void;
   clearInbox: () => void;
   setQrCodeUrl: (url: string) => void;
+  setServiceLimits: (limits: ServiceLimits) => void;
 }
 
 // Create the context
@@ -116,6 +126,12 @@ export const GlobalStateProvider = ({ children }: { children: ReactNode }) => {
   const [history, setHistory] = useLocalStorage<HistoryItem[]>('app_history', []);
   const [messages, setMessages] = useLocalStorage<Message[]>('app_messages', []);
   const [qrCodeUrl, setQrCodeUrl] = useLocalStorage<string>('app_qr_code_url', 'https://i.ibb.co/QvH6T1Yb/IMG-20251210-165618.jpg');
+  const [serviceLimits, setServiceLimits] = useLocalStorage<ServiceLimits>('app_service_limits', {
+    followers: 1000,
+    likes: 1000,
+    comments: 1000,
+    views: 1000,
+  });
 
   // Effect to initialize or update user data when authUser changes
   useEffect(() => {
@@ -175,20 +191,21 @@ export const GlobalStateProvider = ({ children }: { children: ReactNode }) => {
 
   const updateOrder = (orderId: string, updates: Partial<Order>) => {
     const originalOrder = orders.find(o => o.id === orderId);
+    if (!originalOrder) return;
 
+    // If order is being declined, and was not already declined, refund the user
+    if (updates.status === 'Declined' && originalOrder.status !== 'Declined') {
+        const userToUpdate = users.find(u => u.name === originalOrder.user);
+        if (userToUpdate) {
+            setWallets(prevWallets => prevWallets.map(w =>
+            w.userId === userToUpdate.id ? { ...w, balance: w.balance + originalOrder.price } : w
+            ));
+        }
+    }
+    
     setOrders(prevOrders => prevOrders.map(order => 
       order.id === orderId ? { ...order, ...updates } : order
     ));
-
-    // If the order was just declined, refund the user
-    if (originalOrder && updates.status === 'Declined' && originalOrder.status !== 'Declined') {
-      const userToUpdate = users.find(u => u.name === originalOrder.user);
-      if (userToUpdate) {
-        setWallets(prevWallets => prevWallets.map(w =>
-          w.userId === userToUpdate.id ? { ...w, balance: w.balance + originalOrder.price } : w
-        ));
-      }
-    }
   };
   
   const addFundRequest = (request: FundRequest) => {
@@ -200,9 +217,6 @@ export const GlobalStateProvider = ({ children }: { children: ReactNode }) => {
       if (!originalRequest) return;
 
       const updatedRequest = { ...originalRequest, ...updates };
-
-      // Update the request list first
-      setFundRequests(prev => prev.map(req => req.id === requestId ? updatedRequest : req));
 
       // Only process wallet change if status is changing to "Approved"
       if (updates.status === 'Approved' && originalRequest.status !== 'Approved') {
@@ -217,6 +231,9 @@ export const GlobalStateProvider = ({ children }: { children: ReactNode }) => {
               );
           }
       }
+      
+      // Update the request list after processing logic
+      setFundRequests(prev => prev.map(req => req.id === requestId ? updatedRequest : req));
   }
 
   const addHistoryItem = (item: HistoryItem) => {
@@ -251,6 +268,11 @@ export const GlobalStateProvider = ({ children }: { children: ReactNode }) => {
     });
   }
 
+  const getTodaysOrderCount = (service: string) => {
+    const today = new Date().toISOString().split('T')[0];
+    return orders.filter(o => o.service.toLowerCase() === service.toLowerCase() && o.date.startsWith(today)).length;
+  }
+
   const currentUserWallet = wallets.find(w => w.userId === authUser?.uid) || { userId: '', name: '', balance: 0 };
   
   const userMessages = messages.filter(m => m.recipient === 'all' || m.recipient === authUser?.uid);
@@ -264,6 +286,8 @@ export const GlobalStateProvider = ({ children }: { children: ReactNode }) => {
     history,
     messages: userMessages,
     qrCodeUrl,
+    serviceLimits,
+    getTodaysOrderCount,
     addOrder,
     updateOrder,
     addFundRequest,
@@ -272,6 +296,7 @@ export const GlobalStateProvider = ({ children }: { children: ReactNode }) => {
     sendMessageToAll,
     clearInbox,
     setQrCodeUrl,
+    setServiceLimits,
   };
 
   return (
@@ -289,5 +314,3 @@ export const useGlobalState = () => {
   }
   return context;
 };
-
-    

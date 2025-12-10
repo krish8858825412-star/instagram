@@ -20,7 +20,7 @@ export default function AdminPage() {
   const [currentView, setCurrentView] = useState<AdminView>('orders');
   const router = useRouter();
   const { toast } = useToast();
-  const { users, orders, wallets, fundRequests, history, sendMessageToAll, qrCodeUrl, setQrCodeUrl } = useGlobalState();
+  const { users, orders, wallets, fundRequests, history, sendMessageToAll, qrCodeUrl, setQrCodeUrl, serviceLimits, setServiceLimits } = useGlobalState();
 
   const sortPendingFirst = (a: { status: string }, b: { status: string }) => {
     if (a.status === 'Pending' && b.status !== 'Pending') return -1;
@@ -61,9 +61,18 @@ export default function AdminPage() {
     const form = e.target as HTMLFormElement;
     const newQrCodeUrl = (form.elements.namedItem('qrCodeUrl') as HTMLInputElement).value;
     setQrCodeUrl(newQrCodeUrl);
+
+    const newLimits = {
+      followers: parseInt((form.elements.namedItem('followersLimit') as HTMLInputElement).value, 10) || 0,
+      likes: parseInt((form.elements.namedItem('likesLimit') as HTMLInputElement).value, 10) || 0,
+      comments: parseInt((form.elements.namedItem('commentsLimit') as HTMLInputElement).value, 10) || 0,
+      views: parseInt((form.elements.namedItem('viewsLimit') as HTMLInputElement).value, 10) || 0,
+    };
+    setServiceLimits(newLimits);
+
     toast({
       title: 'Settings Saved!',
-      description: 'The QR code URL has been updated.',
+      description: 'The application settings have been updated.',
     });
   }
 
@@ -270,20 +279,49 @@ export default function AdminPage() {
                        <CardDescription>Configure global settings for the application.</CardDescription>
                    </CardHeader>
                    <CardContent>
-                       <form onSubmit={handleSettingsSubmit} className="space-y-4">
-                           <div className="space-y-2">
-                               <Label htmlFor="qrCodeUrl">UPI QR Code Image URL</Label>
-                               <Input 
-                                 id="qrCodeUrl" 
-                                 name="qrCodeUrl" 
-                                 placeholder="https://example.com/qr-code.png" 
-                                 defaultValue={qrCodeUrl}
-                                 required 
-                               />
-                               <p className='text-xs text-muted-foreground'>
-                                   Enter the direct URL to your QR code image. This will be shown to users on the Add Funds page.
-                               </p>
-                           </div>
+                       <form onSubmit={handleSettingsSubmit} className="space-y-6">
+                            <div className="space-y-4 p-4 border rounded-lg">
+                                <h3 className="font-semibold text-lg">General Settings</h3>
+                               <div className="space-y-2">
+                                   <Label htmlFor="qrCodeUrl">UPI QR Code Image URL</Label>
+                                   <Input 
+                                     id="qrCodeUrl" 
+                                     name="qrCodeUrl" 
+                                     placeholder="https://example.com/qr-code.png" 
+                                     defaultValue={qrCodeUrl}
+                                     required 
+                                   />
+                                   <p className='text-xs text-muted-foreground'>
+                                       Enter the direct URL to your QR code image. This will be shown to users on the Add Funds page.
+                                   </p>
+                               </div>
+                            </div>
+
+                            <div className="space-y-4 p-4 border rounded-lg">
+                                <h3 className="font-semibold text-lg">Daily Order Limits</h3>
+                                <p className='text-sm text-muted-foreground'>
+                                    Set the maximum number of orders that can be placed for each service per day. Set to 0 for unlimited.
+                                </p>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="space-y-2">
+                                        <Label htmlFor="followersLimit">Followers Limit</Label>
+                                        <Input id="followersLimit" name="followersLimit" type="number" defaultValue={serviceLimits.followers} />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="likesLimit">Likes Limit</Label>
+                                        <Input id="likesLimit" name="likesLimit" type="number" defaultValue={serviceLimits.likes} />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="commentsLimit">Comments Limit</Label>
+                                        <Input id="commentsLimit" name="commentsLimit" type="number" defaultValue={serviceLimits.comments} />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="viewsLimit">Views Limit</Label>
+                                        <Input id="viewsLimit" name="viewsLimit" type="number" defaultValue={serviceLimits.views} />
+                                    </div>
+                                </div>
+                            </div>
+
                            <Button type="submit">Save Settings</Button>
                        </form>
                    </CardContent>

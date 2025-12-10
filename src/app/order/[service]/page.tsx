@@ -15,12 +15,14 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ArrowLeft, CheckCircle, ClipboardPaste, Loader2, Wallet } from "lucide-react";
+import { ArrowLeft, CheckCircle, ClipboardPaste, Loader2, Wallet, XCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { OrderPlacedDialog } from "@/components/order-placed-dialog";
 import { useGlobalState } from "@/contexts/state-context";
 import { useAuth } from "@/hooks/use-auth";
 import { SplashScreen } from "@/components/splash-screen";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+
 
 const serviceDetails: { [key: string]: { title: string; unit: string; step: number } } = {
   followers: { title: "Followers", unit: "followers", step: 10 },
@@ -36,7 +38,7 @@ export default function ServiceOrderPage() {
   const params = useParams();
   const { toast } = useToast();
   const { user, loading } = useAuth();
-  const { wallet, addOrder, addHistoryItem } = useGlobalState();
+  const { wallet, addOrder, addHistoryItem, serviceLimits, getTodaysOrderCount } = useGlobalState();
   const service = Array.isArray(params.service) ? params.service[0] : params.service;
   const details = serviceDetails[service] || { title: "Service", unit: "items", step: 10 };
 
@@ -50,6 +52,10 @@ export default function ServiceOrderPage() {
       router.replace("/");
     }
   }, [user, loading, router]);
+  
+  const todaysOrders = getTodaysOrderCount(details.title);
+  const dailyLimit = serviceLimits[details.title.toLowerCase() as keyof typeof serviceLimits] || 0;
+  const isLimitReached = dailyLimit > 0 && todaysOrders >= dailyLimit;
 
   const price = (quantity / 10) * PRICE_PER_10_UNITS;
   const hasSufficientFunds = wallet.balance >= price;
@@ -78,6 +84,14 @@ export default function ServiceOrderPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isLimitReached) {
+      toast({
+        variant: "destructive",
+        title: "Daily Limit Reached",
+        description: `The daily order limit for ${details.title} has been reached. Please try again tomorrow.`,
+      });
+      return;
+    }
     if (!link) {
       toast({
         variant: "destructive",
@@ -105,7 +119,7 @@ export default function ServiceOrderPage() {
         link,
         quantity,
         price,
-        status: 'Pending',
+        status: 'Pending' as 'Pending',
         date: new Date().toISOString(),
       };
       addOrder(newOrder);
@@ -146,6 +160,15 @@ export default function ServiceOrderPage() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
+                 {isLimitReached && (
+                    <Alert variant="destructive">
+                      <XCircle className="h-4 w-4" />
+                      <AlertTitle>Daily Limit Reached</AlertTitle>
+                      <AlertDescription>
+                        The maximum number of orders for {details.title} for today has been reached. Please check back tomorrow.
+                      </AlertDescription>
+                    </Alert>
+                  )}
                   <div className="space-y-2">
                     <Label htmlFor="link">Content Link</Label>
                     <div className="flex gap-2">
@@ -196,7 +219,7 @@ export default function ServiceOrderPage() {
                       ₹{price.toFixed(2)}
                     </span>
                   </div>
-                  <Button type="submit" size="lg" className="w-full sm:w-auto" disabled={isSubmitting || !link || !hasSufficientFunds}>
+                  <Button type="submit" size="lg" className="w-full sm:w-auto" disabled={isSubmitting || !link || !hasSufficientFunds || isLimitReached}>
                     {isSubmitting ? (
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     ) : (
