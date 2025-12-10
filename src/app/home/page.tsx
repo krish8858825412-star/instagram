@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useEffect } from "react";
@@ -7,6 +8,7 @@ import { Header } from "@/components/header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Separator } from "@/components/ui/separator";
+import { AnimatedBackground } from "@/components/animated-background";
 
 export default function HomePage() {
   const { user, loading } = useAuth();
@@ -37,13 +39,16 @@ export default function HomePage() {
         </div>
         <Separator />
         <div className="grid gap-4 md:gap-8">
-          <Card className="shadow-xl bg-transparent backdrop-blur-lg border-border/20">
-            <CardHeader>
-              <CardTitle>Your Dashboard</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p>This is your personal dashboard. More widgets and features coming soon!</p>
-            </CardContent>
+          <Card className="shadow-xl bg-transparent backdrop-blur-lg border-border/20 relative overflow-hidden">
+            <AnimatedBackground />
+            <div className="relative z-10">
+              <CardHeader>
+                <CardTitle>Your Dashboard</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p>This is your personal dashboard. More widgets and features coming soon!</p>
+              </CardContent>
+            </div>
           </Card>
         </div>
       </main>
