@@ -167,23 +167,27 @@ export const GlobalStateProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const updateOrder = (orderId: string, updates: Partial<Order>) => {
-    setOrders(prev => prev.map(order => {
-      if (order.id === orderId) {
-        const updatedOrder = { ...order, ...updates };
-        
-        // If order is completed, deduct from wallet
-        if (updates.status === 'Completed' && order.status !== 'Completed') {
-            const user = users.find(u => u.name === updatedOrder.user);
-            if (user) {
-                setWallets(prevWallets => prevWallets.map(w => 
-                    w.userId === user.id ? { ...w, balance: w.balance - updatedOrder.price } : w
-                ));
-            }
+    setOrders(prevOrders => {
+      const newOrders = prevOrders.map(order => 
+        order.id === orderId ? { ...order, ...updates } : order
+      );
+
+      // Find the specific order that was just updated
+      const updatedOrder = newOrders.find(o => o.id === orderId);
+      const originalOrder = prevOrders.find(o => o.id === orderId);
+
+      // If the order was just completed, deduct from the wallet
+      if (updatedOrder && updates.status === 'Completed' && originalOrder?.status !== 'Completed') {
+        const userToUpdate = users.find(u => u.name === updatedOrder.user);
+        if (userToUpdate) {
+          setWallets(prevWallets => prevWallets.map(w =>
+            w.userId === userToUpdate.id ? { ...w, balance: w.balance - updatedOrder.price } : w
+          ));
         }
-        return updatedOrder;
       }
-      return order;
-    }));
+      
+      return newOrders;
+    });
   };
   
   const addFundRequest = (request: FundRequest) => {
