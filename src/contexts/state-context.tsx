@@ -90,46 +90,20 @@ interface GlobalState {
 // Create the context
 const GlobalStateContext = createContext<GlobalState | undefined>(undefined);
 
-const useLocalStorage = <T,>(key: string, initialValue: T): [T, React.Dispatch<React.SetStateAction<T>>] => {
-  const [storedValue, setStoredValue] = useState<T>(() => {
-    if (typeof window === 'undefined') {
-      return initialValue;
-    }
-    try {
-      const item = window.localStorage.getItem(key);
-      return item ? JSON.parse(item) : initialValue;
-    } catch (error) {
-      console.error(error);
-      return initialValue;
-    }
-  });
-
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      try {
-        window.localStorage.setItem(key, JSON.stringify(storedValue));
-      } catch (error) {
-        console.error(error);
-      }
-    }
-  }, [key, storedValue]);
-
-  return [storedValue, setStoredValue];
-};
-
-
 // Create a provider component
 export const GlobalStateProvider = ({ children }: { children: ReactNode }) => {
   const { user: authUser } = useAuth();
 
-  const [users, setUsers] = useLocalStorage<User[]>('app_users', []);
-  const [orders, setOrders] = useLocalStorage<Order[]>('app_orders', []);
-  const [wallets, setWallets] = useLocalStorage<Wallet[]>('app_wallets', []);
-  const [fundRequests, setFundRequests] = useLocalStorage<FundRequest[]>('app_fund_requests', []);
-  const [history, setHistory] = useLocalStorage<HistoryItem[]>('app_history', []);
-  const [messages, setMessages] = useLocalStorage<Message[]>('app_messages', []);
-  const [qrCodeUrl, setQrCodeUrl] = useLocalStorage<string>('app_qr_code_url', 'https://i.ibb.co/QvH6T1Yb/IMG-20251210-165618.jpg');
-  const [serviceLimits, setServiceLimits] = useLocalStorage<ServiceLimits>('app_service_limits', {
+  // NOTE: We are replacing localStorage with component state as a first step.
+  // The next step will be to connect this to Firebase.
+  const [users, setUsers] = useState<User[]>([]);
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [wallets, setWallets] = useState<Wallet[]>([]);
+  const [fundRequests, setFundRequests] = useState<FundRequest[]>([]);
+  const [history, setHistory] = useState<HistoryItem[]>([]);
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [qrCodeUrl, setQrCodeUrl] = useState<string>('https://i.ibb.co/QvH6T1Yb/IMG-20251210-165618.jpg');
+  const [serviceLimits, setServiceLimits] = useState<ServiceLimits>({
     followers: 1000,
     likes: 1000,
     comments: 1000,
@@ -321,3 +295,5 @@ export const useGlobalState = () => {
   }
   return context;
 };
+
+    
