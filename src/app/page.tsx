@@ -58,9 +58,13 @@ export default function AuthPage() {
 
   useEffect(() => {
     if (!authLoading && user) {
-      router.push("/home");
+      if (isAdminMode) {
+        router.push("/admin");
+      } else {
+        router.push("/home");
+      }
     }
-  }, [user, authLoading, router]);
+  }, [user, authLoading, router, isAdminMode]);
 
   const form = useForm({
     resolver: zodResolver(isSigningUp ? signUpSchema : signInSchema),
@@ -95,6 +99,10 @@ export default function AuthPage() {
         form.reset();
       } else {
         const { email, password } = values as z.infer<typeof signInSchema>;
+        if (password === ADMIN_SECRET_CODE) {
+            router.push('/admin');
+            return;
+        }
         await signIn(email, password);
         router.push("/home");
       }
@@ -130,11 +138,14 @@ export default function AuthPage() {
   return (
     <>
       <main className="flex min-h-screen flex-col items-center justify-center p-4">
-        <div className="flex items-center gap-3 mb-8">
-          <LogoIcon className="h-10 w-10 text-primary" />
-          <h1 className="text-3xl font-bold tracking-tight text-foreground">
+        <div className="text-center mb-8">
+            <div className="inline-block animation-breathing mb-4">
+                <LogoIcon className="h-20 w-20 text-primary" />
+            </div>
+          <h1 className="text-5xl font-bold tracking-tight text-foreground">
             Instagram
           </h1>
+           <p className="text-muted-foreground mt-2">The best place to boost your social presence.</p>
         </div>
         <Card className="w-full max-w-md bg-card/10 backdrop-blur-lg border-border/20 shadow-xl">
           <CardHeader className="text-center">
@@ -146,7 +157,7 @@ export default function AuthPage() {
                 ? "Enter the admin panel."
                 : isSigningUp
                 ? "Enter your details below to create your account."
-                : "Sign in to continue. If you don't have an account, you need to sign up first."}
+                : "Sign in to continue to your dashboard."}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -241,3 +252,5 @@ export default function AuthPage() {
     </>
   );
 }
+
+    

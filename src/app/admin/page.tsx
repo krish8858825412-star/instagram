@@ -7,17 +7,18 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Users, ShoppingCart, Wallet, Banknote, History, MessageSquare, Settings, LifeBuoy } from 'lucide-react';
+import { Users, ShoppingCart, Wallet, Banknote, History, MessageSquare, Settings, LifeBuoy, LayoutDashboard } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { useGlobalState } from '@/contexts/state-context';
+import { AdminChart } from '@/components/admin-chart';
 
-type AdminView = 'users' | 'orders' | 'wallets' | 'fund-requests' | 'all-history' | 'inbox' | 'settings' | 'support';
+type AdminView = 'dashboard' | 'users' | 'orders' | 'wallets' | 'fund-requests' | 'all-history' | 'inbox' | 'settings' | 'support';
 
 export default function AdminPage() {
-  const [currentView, setCurrentView] = useState<AdminView>('orders');
+  const [currentView, setCurrentView] = useState<AdminView>('dashboard');
   const router = useRouter();
   const { toast } = useToast();
   const { users, orders, wallets, fundRequests, history, sendMessageToAll, qrCodeUrl, setQrCodeUrl, serviceLimits, setServiceLimits } = useGlobalState();
@@ -32,6 +33,7 @@ export default function AdminPage() {
   const sortedFundRequests = [...fundRequests].sort(sortPendingFirst);
 
   const viewConfig = {
+    dashboard: { title: 'Dashboard', icon: LayoutDashboard, description: 'View analytics', data: [], count: 0 },
     users: { title: 'Users', icon: Users, description: 'Manage all users', data: users, count: users.length },
     orders: { title: 'Orders', icon: ShoppingCart, description: 'Review new orders', data: sortedOrders, count: orders.filter(o => o.status === 'Pending').length },
     wallets: { title: 'Wallets', icon: Wallet, description: 'View user balances', data: wallets, count: wallets.length },
@@ -79,6 +81,18 @@ export default function AdminPage() {
 
   const renderContent = () => {
     switch(currentView) {
+        case 'dashboard':
+            return (
+                <Card className="shadow-xl bg-card border-border/20">
+                    <CardHeader>
+                        <CardTitle>Analytics Dashboard</CardTitle>
+                        <CardDescription>An overview of your application's activity.</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                       <AdminChart users={users} orders={orders} />
+                    </CardContent>
+                </Card>
+            );
         case 'users':
             return (
                 <Card className="shadow-xl bg-card border-border/20">
@@ -358,13 +372,13 @@ export default function AdminPage() {
         <h1 className="text-xl font-bold">Admin Panel</h1>
       </header>
       <main className="flex flex-1 flex-col gap-4 p-4 md:gap-8 md:p-8">
-        <div className="grid gap-4 md:grid-cols-2 md:gap-8 lg:grid-cols-4 xl:grid-cols-8">
+        <div className="grid gap-4 md:grid-cols-2 md:gap-8 lg:grid-cols-3 xl:grid-cols-5">
             {(Object.keys(viewConfig) as AdminView[]).map((view) => {
                 const Icon = viewConfig[view].icon;
                 const isPendingView = view === 'orders' || view === 'fund-requests';
                 let count: number;
 
-                if (view === 'settings' || view === 'inbox' || view === 'support') {
+                if (view === 'settings' || view === 'inbox' || view === 'support' || view === 'dashboard') {
                     count = viewConfig[view].count;
                 } else if (isPendingView) {
                     count = viewConfig[view].count;
@@ -384,7 +398,7 @@ export default function AdminPage() {
                         </CardHeader>
                         <CardContent>
                             <div className="text-2xl font-bold">
-                                {count}
+                                {view === 'dashboard' ? '' : count}
                                 {isPendingView && count > 0 && <span className="text-sm font-normal text-muted-foreground"> pending</span>}
                             </div>
                             <p className="text-xs text-muted-foreground">{viewConfig[view].description}</p>
@@ -400,3 +414,5 @@ export default function AdminPage() {
     </div>
   );
 }
+
+    
