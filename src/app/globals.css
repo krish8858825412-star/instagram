@@ -67,19 +67,6 @@
     animation: breathing 3s ease-in-out infinite;
   }
   
-  @keyframes move {
-    0% {
-      transform: translate(0, 0);
-    }
-    100% {
-      transform: translate(-2rem, -2rem);
-    }
-  }
-
-  .animate-move {
-    animation: move 30s linear infinite, breathing 5s ease-in-out infinite alternate;
-  }
-
   .animation-focus-in {
     animation: focus-in 1.5s ease-out forwards;
   }

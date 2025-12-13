@@ -295,5 +295,3 @@ export const useGlobalState = () => {
   }
   return context;
 };
-
-    
