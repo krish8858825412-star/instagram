@@ -25,7 +25,7 @@ export function AnimatedBackground() {
         "pointer-events-none fixed inset-0 -z-10 transition duration-300"
       )}
       style={{
-        background: `radial-gradient(150px at ${mousePosition.x}px ${mousePosition.y}px, rgba(255, 0, 182, 0.5), transparent 80%)`,
+        background: `radial-gradient(600px at ${mousePosition.x}px ${mousePosition.y}px, rgba(255, 0, 182, 0.15), transparent 80%)`,
       }}
     />
   );
