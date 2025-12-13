@@ -113,44 +113,45 @@ export const GlobalStateProvider = ({ children }: { children: ReactNode }) => {
   // Effect to initialize or update user data when authUser changes
   useEffect(() => {
     if (authUser) {
-      // Check if user already exists
-      const userExists = users.some(u => u.id === authUser.uid);
-      if (!userExists) {
-        const newUser: User = {
-          id: authUser.uid,
-          name: authUser.displayName || `User ${authUser.uid.substring(0, 5)}`,
-          email: authUser.email || '',
-          date: new Date().toISOString(),
-        };
-        setUsers(prev => [...prev, newUser]);
-         addHistoryItem({
-          action: 'User Registered',
-          target: newUser.id,
-          user: newUser.name,
-          date: new Date().toISOString(),
-        });
-        
-        // Add welcome message
-        const welcomeMessage: Message = {
-            id: `msg-${Date.now()}`,
-            recipient: authUser.uid,
-            subject: "Welcome to Instagram!",
-            message: `Hi ${newUser.name}, welcome aboard! We're thrilled to have you. You can start by exploring our services or adding funds to your wallet.`,
+      setUsers(prevUsers => {
+        const userExists = prevUsers.some(u => u.id === authUser.uid);
+        if (!userExists) {
+          const newUser: User = {
+            id: authUser.uid,
+            name: authUser.displayName || `User ${authUser.uid.substring(0, 5)}`,
+            email: authUser.email || '',
             date: new Date().toISOString(),
-        };
-        setMessages(prev => [...prev, welcomeMessage]);
-      }
+          };
+          addHistoryItem({
+            action: 'User Registered',
+            target: newUser.id,
+            user: newUser.name,
+            date: new Date().toISOString(),
+          });
+          setMessages(prev => [...prev, {
+              id: `msg-${Date.now()}`,
+              recipient: authUser.uid,
+              subject: "Welcome to Instagram!",
+              message: `Hi ${newUser.name}, welcome aboard! We're thrilled to have you. You can start by exploring our services or adding funds to your wallet.`,
+              date: new Date().toISOString(),
+          }]);
+          return [...prevUsers, newUser];
+        }
+        return prevUsers;
+      });
 
-      // Check if wallet already exists
-      const walletExists = wallets.some(w => w.userId === authUser.uid);
-      if (!walletExists) {
-        const newWallet: Wallet = {
-          userId: authUser.uid,
-          name: authUser.displayName || `User ${authUser.uid.substring(0, 5)}`,
-          balance: 0, // Start with 0 balance
-        };
-        setWallets(prev => [...prev, newWallet]);
-      }
+      setWallets(prevWallets => {
+        const walletExists = prevWallets.some(w => w.userId === authUser.uid);
+        if (!walletExists) {
+          const newWallet: Wallet = {
+            userId: authUser.uid,
+            name: authUser.displayName || `User ${authUser.uid.substring(0, 5)}`,
+            balance: 0, // Start with 0 balance
+          };
+          return [...prevWallets, newWallet];
+        }
+        return prevWallets;
+      });
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [authUser]);
