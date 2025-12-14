@@ -312,10 +312,25 @@ export default function AuthPage() {
                             <p className="text-xs text-muted-foreground">Password strength: <span className="font-semibold">{passwordStrength.label}</span></p>
                           </div>
                       )}
-                      {isSigningUp && form.getValues('referralCode') && (
-                        <p className="text-sm text-green-500">Referral code applied: {form.getValues('referralCode')}</p>
-                      )}
                     </div>
+
+                    {isSigningUp && (
+                      <div className="relative">
+                          <FormField
+                          control={form.control}
+                          name="referralCode"
+                          render={({ field }) => (
+                              <FormItem>
+                              <FormControl>
+                                  <Input placeholder="Referral Code (Optional)" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                              </FormItem>
+                          )}
+                          />
+                      </div>
+                    )}
+
 
                     <Button type="submit" className="w-full" disabled={isSubmitting}>
                       {isSubmitting && (

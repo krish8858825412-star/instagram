@@ -23,6 +23,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Input } from '@/components/ui/input';
 
 export default function ReferralPage() {
   const { user, loading } = useAuth();
@@ -48,12 +49,11 @@ export default function ReferralPage() {
   
   const referralLink = currentUser ? `${origin}/?ref=${currentUser.referralCode}` : '';
 
-  const handleCopyToClipboard = () => {
-    if (!referralLink) return;
-    navigator.clipboard.writeText(referralLink);
+  const handleCopyToClipboard = (textToCopy: string) => {
+    navigator.clipboard.writeText(textToCopy);
     toast({
       title: "Copied!",
-      description: "Your referral link has been copied to the clipboard.",
+      description: "The text has been copied to the clipboard.",
     });
   };
 
@@ -88,12 +88,21 @@ export default function ReferralPage() {
                 Invite a friend with your unique referral link. When they sign up and add funds to their wallet, you'll earn a **7% commission** on the amount they add. This is a lifetime reward, so you'll earn from every deposit they make, forever!
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-6">
               <div>
                 <p className="text-sm font-semibold mb-2">Your Unique Referral Link</p>
-                <div className="flex items-center gap-2 p-3 bg-muted/50 rounded-lg border">
-                  <span className="text-lg font-mono tracking-widest flex-grow overflow-x-auto whitespace-nowrap no-scrollbar">{referralLink}</span>
-                  <Button onClick={handleCopyToClipboard} size="icon" variant="ghost">
+                <div className="flex items-center gap-2">
+                  <Input value={referralLink} readOnly className="font-mono tracking-wider"/>
+                  <Button onClick={() => handleCopyToClipboard(referralLink)} size="icon" variant="ghost">
+                    <Copy className="h-5 w-5" />
+                  </Button>
+                </div>
+              </div>
+               <div>
+                <p className="text-sm font-semibold mb-2">Your Referral Code</p>
+                <div className="flex items-center gap-2">
+                   <Input value={currentUser.referralCode} readOnly className="font-mono tracking-widest"/>
+                  <Button onClick={() => handleCopyToClipboard(currentUser.referralCode)} size="icon" variant="ghost">
                     <Copy className="h-5 w-5" />
                   </Button>
                 </div>
@@ -172,17 +181,6 @@ export default function ReferralPage() {
                 )}
               </CardContent>
           </Card>
-          
-          <style jsx>{`
-            .no-scrollbar::-webkit-scrollbar {
-                display: none;
-            }
-            .no-scrollbar {
-                -ms-overflow-style: none;
-                scrollbar-width: none;
-            }
-          `}</style>
-
         </div>
       </main>
     </div>

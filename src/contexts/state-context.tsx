@@ -131,7 +131,7 @@ export const GlobalStateProvider = ({ children }: { children: ReactNode }) => {
     if (authUser) {
       const userExists = users.some(u => u.id === authUser.uid);
       if (!userExists) {
-        const referralCodeInput = getReferralCodeFromStorage();
+        const referralCodeInput = localStorage.getItem(`temp_ref_${authUser.uid}`);
         const referrer = users.find(u => u.referralCode === referralCodeInput);
 
         const newUser: User = {
@@ -140,7 +140,7 @@ export const GlobalStateProvider = ({ children }: { children: ReactNode }) => {
           email: authUser.email || '',
           phone: authUser.phoneNumber || '', // This needs to be captured at sign-up
           date: new Date().toISOString(),
-          referralCode: `${(authUser.displayName || 'USER').toUpperCase().slice(0,4)}${Date.now().toString().slice(-4)}`,
+          referralCode: `${(authUser.displayName || 'USER').toUpperCase().replace(/\s/g, '').slice(0,4)}${Date.now().toString().slice(-4)}`,
           referredBy: referrer?.id,
         };
         
@@ -152,6 +152,10 @@ export const GlobalStateProvider = ({ children }: { children: ReactNode }) => {
                 newUser.phone = tempPhone;
                 localStorage.removeItem(`temp_phone_${authUser.uid}`);
              }
+        }
+        
+        if (referralCodeInput) {
+            localStorage.removeItem(`temp_ref_${authUser.uid}`);
         }
 
 

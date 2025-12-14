@@ -43,8 +43,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signUp = async (name: string, email: string, password: string, phone: string, referralCode?: string): Promise<any> => {
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
     if (userCredential.user) {
-      // The phone number and referral code will be picked up by the state context
       await updateProfile(userCredential.user, { displayName: name });
+      // This is a temp solution to pass data to the state context
+      // In a real app with a backend, this would be a single atomic operation
+      if(typeof window !== 'undefined'){
+          localStorage.setItem(`temp_phone_${userCredential.user.uid}`, phone);
+          if(referralCode) {
+            localStorage.setItem(`temp_ref_${userCredential.user.uid}`, referralCode);
+          }
+      }
     }
     return userCredential;
   };
