@@ -28,6 +28,16 @@ interface FundRequest {
     transactionId?: string;
 }
 
+interface WithdrawalRequest {
+    id: string;
+    user: string;
+    userId: string;
+    amount: number;
+    date: string;
+    status: 'Pending' | 'Completed' | 'Declined';
+    method: string; // e.g., UPI ID
+}
+
 interface Wallet {
     userId: string;
     name: string;
@@ -74,6 +84,7 @@ interface GlobalState {
   wallets: Wallet[];
   wallet: Wallet; // Current user's wallet
   fundRequests: FundRequest[];
+  withdrawalRequests: WithdrawalRequest[];
   history: HistoryItem[];
   messages: Message[];
   qrCodeUrl: string;
@@ -104,6 +115,10 @@ export const GlobalStateProvider = ({ children }: { children: ReactNode }) => {
   const [orders, setOrders] = useState<Order[]>([]);
   const [wallets, setWallets] = useState<Wallet[]>([]);
   const [fundRequests, setFundRequests] = useState<FundRequest[]>([]);
+  const [withdrawalRequests, setWithdrawalRequests] = useState<WithdrawalRequest[]>([
+     { id: 'WDR789', userId: 'user1', user: 'Jane Doe', amount: 50.00, date: new Date().toISOString(), status: 'Pending', method: 'jane@upi' },
+     { id: 'WDR456', userId: 'user2', user: 'John Smith', amount: 120.00, date: new Date(Date.now() - 86400000).toISOString(), status: 'Completed', method: 'john@upi' },
+  ]);
   const [history, setHistory] = useState<HistoryItem[]>([]);
   const [messages, setMessages] = useState<Message[]>([]);
   const [qrCodeUrl, setQrCodeUrl] = useState<string>('https://i.ibb.co/QvH6T1Yb/IMG-20251210-165618.jpg');
@@ -345,6 +360,7 @@ export const GlobalStateProvider = ({ children }: { children: ReactNode }) => {
     wallets,
     wallet: currentUserWallet,
     fundRequests,
+    withdrawalRequests,
     history,
     messages: userMessages,
     qrCodeUrl,

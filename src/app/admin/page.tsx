@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Users, ShoppingCart, Wallet, Banknote, History, MessageSquare, Settings, LifeBuoy, LayoutDashboard } from 'lucide-react';
+import { Users, ShoppingCart, Wallet, Banknote, History, MessageSquare, Settings, LifeBuoy, LayoutDashboard, Send } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -15,13 +15,13 @@ import { useToast } from '@/hooks/use-toast';
 import { useGlobalState } from '@/contexts/state-context';
 import { AdminChart } from '@/components/admin-chart';
 
-type AdminView = 'dashboard' | 'users' | 'orders' | 'wallets' | 'fund-requests' | 'all-history' | 'inbox' | 'settings' | 'support';
+type AdminView = 'dashboard' | 'users' | 'orders' | 'wallets' | 'fund-requests' | 'withdrawals' | 'all-history' | 'inbox' | 'settings' | 'support';
 
 export default function AdminPage() {
   const [currentView, setCurrentView] = useState<AdminView>('dashboard');
   const router = useRouter();
   const { toast } = useToast();
-  const { users, orders, wallets, fundRequests, history, sendMessageToAll, qrCodeUrl, setQrCodeUrl, serviceLimits, setServiceLimits } = useGlobalState();
+  const { users, orders, wallets, fundRequests, withdrawalRequests, history, sendMessageToAll, qrCodeUrl, setQrCodeUrl, serviceLimits, setServiceLimits } = useGlobalState();
 
   const sortPendingFirst = (a: { status: string }, b: { status: string }) => {
     if (a.status === 'Pending' && b.status !== 'Pending') return -1;
@@ -31,6 +31,7 @@ export default function AdminPage() {
 
   const sortedOrders = [...orders].sort(sortPendingFirst);
   const sortedFundRequests = [...fundRequests].sort(sortPendingFirst);
+  const sortedWithdrawalRequests = [...withdrawalRequests].sort(sortPendingFirst);
 
   const viewConfig = {
     dashboard: { title: 'Dashboard', icon: LayoutDashboard, description: 'View analytics', data: [], count: 0 },
@@ -38,6 +39,7 @@ export default function AdminPage() {
     orders: { title: 'Orders', icon: ShoppingCart, description: 'Review new orders', data: sortedOrders, count: orders.filter(o => o.status === 'Pending').length },
     wallets: { title: 'Wallets', icon: Wallet, description: 'View user balances', data: wallets, count: wallets.length },
     'fund-requests': { title: 'Fund Requests', icon: Banknote, description: 'Approve fund requests', data: sortedFundRequests, count: fundRequests.filter(fr => fr.status === 'Pending').length },
+    withdrawals: { title: 'Withdrawals', icon: Send, description: 'Process withdrawals', data: sortedWithdrawalRequests, count: withdrawalRequests.filter(wr => wr.status === 'Pending').length },
     'all-history': { title: 'All History', icon: History, description: 'View all system actions', data: history, count: history.length },
     inbox: { title: 'Inbox', icon: MessageSquare, description: 'Send messages to users', data: [], count: 0 },
     settings: { title: 'Settings', icon: Settings, description: 'Configure application', data: [], count: 0 },
@@ -237,6 +239,47 @@ export default function AdminPage() {
                     </CardContent>
                 </Card>
             );
+        case 'withdrawals':
+            return (
+                <Card className="shadow-xl bg-card/10 backdrop-blur-lg border-border/20">
+                    <CardHeader>
+                        <CardTitle>Withdrawal Requests</CardTitle>
+                        <CardDescription>Process user withdrawal requests. Pending requests are shown first.</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <Table>
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead>Request ID</TableHead>
+                                    <TableHead>User</TableHead>
+                                    <TableHead>Amount</TableHead>
+                                    <TableHead>Method</TableHead>
+                                    <TableHead>Date</TableHead>
+                                    <TableHead>Status</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                {viewConfig.withdrawals.data.map((request) => (
+                                    <TableRow 
+                                        key={request.id} 
+                                        // onClick={() => router.push(`/admin/withdrawals/${request.id}`)} 
+                                        className={`cursor-pointer ${request.status !== 'Pending' ? 'bg-muted/30 text-muted-foreground' : ''}`}
+                                    >
+                                        <TableCell>{request.id}</TableCell>
+                                        <TableCell>{request.user}</TableCell>
+                                        <TableCell>₹{request.amount.toFixed(2)}</TableCell>
+                                        <TableCell>{request.method}</TableCell>
+                                        <TableCell>{new Date(request.date).toLocaleDateString()}</TableCell>
+                                        <TableCell>
+                                            <Badge variant={request.status === 'Pending' ? 'outline' : 'secondary'}>{request.status}</Badge>
+                                        </TableCell>
+                                    </TableRow>
+                                ))}
+                            </TableBody>
+                        </Table>
+                    </CardContent>
+                </Card>
+            );
         case 'all-history':
             return (
                 <Card className="shadow-xl bg-card/10 backdrop-blur-lg border-border/20">
@@ -375,10 +418,10 @@ export default function AdminPage() {
         <div className="grid gap-4 md:grid-cols-2 md:gap-8 lg:grid-cols-3 xl:grid-cols-5">
             {(Object.keys(viewConfig) as AdminView[]).map((view) => {
                 const Icon = viewConfig[view].icon;
-                const isPendingView = view === 'orders' || view === 'fund-requests';
+                const isPendingView = view === 'orders' || view === 'fund-requests' || view === 'withdrawals';
                 let count: number;
 
-                if (view === 'settings' || view === 'inbox' || view === 'support' || view === 'dashboard') {
+                if (['dashboard', 'settings', 'inbox', 'support'].includes(view)) {
                     count = viewConfig[view].count;
                 } else if (isPendingView) {
                     count = viewConfig[view].count;
