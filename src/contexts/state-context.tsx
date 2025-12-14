@@ -140,12 +140,10 @@ export const GlobalStateProvider = ({ children }: { children: ReactNode }) => {
           email: authUser.email || '',
           phone: '', // Will be populated from session storage
           date: new Date().toISOString(),
-          referralCode: `${(authUser.displayName || 'USER').toUpperCase().replace(/\s/g, '').slice(0,4)}${Date.now().toString().slice(-4)}`,
+          referralCode: `${(authUser.displayName || 'USER').toUpperCase().replace(/\s/g, '').slice(0, 4)}${Math.random().toString(36).substring(2, 6).toUpperCase()}`,
           referredBy: referrer?.id,
         };
         
-        // This is a workaround to get phone number from auth context on sign up
-        // In a real app, this would be part of the same object
         const tempPhone = sessionStorage.getItem(`temp_phone_${authUser.uid}`);
         if (tempPhone) {
             newUser.phone = tempPhone;
@@ -155,7 +153,6 @@ export const GlobalStateProvider = ({ children }: { children: ReactNode }) => {
         if (referralCodeInput) {
             sessionStorage.removeItem(`temp_ref_${authUser.uid}`);
         }
-
 
         setUsers(prevUsers => {
           if (!prevUsers.some(u => u.id === authUser.uid)) {
@@ -207,7 +204,7 @@ export const GlobalStateProvider = ({ children }: { children: ReactNode }) => {
       }
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [authUser, users]); // Added `users` dependency to correctly find referrer
+  }, [authUser]);
 
   const addOrder = (order: Order) => {
     // Deduct price from wallet immediately on order creation
@@ -257,7 +254,6 @@ export const GlobalStateProvider = ({ children }: { children: ReactNode }) => {
           date: new Date().toISOString(),
         });
         
-        // --- Referral Logic ---
         const userWhoPaid = users.find(u => u.id === originalRequest.userId);
         if (userWhoPaid?.referredBy) {
           const referrerId = userWhoPaid.referredBy;
