@@ -1,16 +1,17 @@
 
 "use client";
 
-import { useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/hooks/use-auth";
 import { Header } from "@/components/header";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Users, ThumbsUp, MessageSquare, Eye, Wallet, ShoppingCart, Loader2 } from "lucide-react";
+import { Users, ThumbsUp, MessageSquare, Eye, Wallet, ShoppingCart, Loader2, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useGlobalState } from "@/contexts/state-context";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
 export default function HomePage() {
   const { user, loading } = useAuth();
@@ -32,10 +33,10 @@ export default function HomePage() {
   }
 
   const features = [
-    { title: "Get Followers", icon: Users, href: "/order/followers" },
-    { title: "Get Likes", icon: ThumbsUp, href: "/order/likes" },
-    { title: "Get Comments", icon: MessageSquare, href: "/order/comments" },
-    { title: "Get Views", icon: Eye, href: "/order/views" },
+    { title: "Get Followers", icon: Users, href: "/order/followers", description: "Increase your account's visibility and social proof with high-quality followers." },
+    { title: "Get Likes", icon: ThumbsUp, href: "/order/likes", description: "Boost the engagement on your posts and reach a wider audience." },
+    { title: "Get Comments", icon: MessageSquare, href: "/order/comments", description: "Spark conversations and make your content more interactive with relevant comments." },
+    { title: "Get Views", icon: Eye, href: "/order/views", description: "Amplify your video's reach and improve its ranking with more views." },
   ];
   
   const pendingOrders = orders.filter(o => o.status === 'Pending').length;
@@ -87,18 +88,32 @@ export default function HomePage() {
             <h2 className="text-xl font-semibold mb-4">What do you want to do today?</h2>
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
             {features.map((feature) => (
-                <Card key={feature.title} className="shadow-lg bg-card/10 backdrop-blur-lg border-border/20 hover:border-primary/80 transition-all">
-                <CardHeader className="flex flex-row items-center justify-between pb-2">
-                    <CardTitle className="text-lg font-medium">{feature.title}</CardTitle>
-                    <feature.icon className="h-6 w-6 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                    <CardDescription>Order new {feature.title.toLowerCase()} for your content.</CardDescription>
-                    <Button asChild className="w-full mt-4">
-                    <Link href={feature.href}>Proceed</Link>
-                    </Button>
-                </CardContent>
+              <Collapsible key={feature.title} asChild>
+                <Card className="shadow-lg bg-card/10 backdrop-blur-lg border-border/20 hover:border-primary/80 transition-all">
+                  <CardHeader className="flex flex-row items-center justify-between pb-4">
+                      <div className="flex items-center gap-3">
+                         <feature.icon className="h-6 w-6 text-muted-foreground" />
+                        <CardTitle className="text-lg font-medium">{feature.title}</CardTitle>
+                      </div>
+                      <CollapsibleTrigger asChild>
+                          <Button variant="ghost" size="icon">
+                              <ChevronDown className="h-4 w-4 transition-transform [&[data-state=open]]:rotate-180" />
+                          </Button>
+                      </CollapsibleTrigger>
+                  </CardHeader>
+                  <CardContent>
+                      <CardDescription>Order new {feature.title.toLowerCase()} for your content.</CardDescription>
+                      <Button asChild className="w-full mt-4">
+                      <Link href={feature.href}>Proceed</Link>
+                      </Button>
+                  </CardContent>
+                  <CollapsibleContent>
+                    <div className="px-6 pb-4 text-sm text-muted-foreground">
+                        <p>{feature.description}</p>
+                    </div>
+                  </CollapsibleContent>
                 </Card>
+              </Collapsible>
             ))}
             </div>
         </div>
