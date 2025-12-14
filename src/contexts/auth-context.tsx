@@ -47,9 +47,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // This is a temp solution to pass data to the state context
       // In a real app with a backend, this would be a single atomic operation
       if(typeof window !== 'undefined'){
-          localStorage.setItem(`temp_phone_${userCredential.user.uid}`, phone);
+          sessionStorage.setItem(`temp_phone_${userCredential.user.uid}`, phone);
           if(referralCode) {
-            localStorage.setItem(`temp_ref_${userCredential.user.uid}`, referralCode);
+            sessionStorage.setItem(`temp_ref_${userCredential.user.uid}`, referralCode);
           }
       }
     }

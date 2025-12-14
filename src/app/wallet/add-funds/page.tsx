@@ -19,7 +19,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 export default function AddFundsPage() {
   const { user, loading } = useAuth();
   const router = useRouter();
-  const { addFundRequest, addHistoryItem, qrCodeUrl } = useGlobalState();
+  const { addFundRequest, updateFundRequest, addHistoryItem, qrCodeUrl } = useGlobalState();
   const { toast } = useToast();
 
   const [amount, setAmount] = useState('');
@@ -47,8 +47,9 @@ export default function AddFundsPage() {
     setIsSubmitting(true);
 
     setTimeout(() => {
+        const newRequestId = `FUND${String(Date.now()).slice(-4)}`;
         const newRequest = {
-            id: `FUND${String(Date.now()).slice(-4)}`,
+            id: newRequestId,
             user: user?.displayName || 'Unknown User',
             userId: user.uid,
             amount: parseFloat(amount),
@@ -64,9 +65,13 @@ export default function AddFundsPage() {
             user: newRequest.user,
             date: new Date().toISOString(),
         });
+        
+        // Auto-approve the request
+        updateFundRequest(newRequestId, { status: 'Approved' });
+
         toast({
-            title: 'Request Submitted',
-            description: `Your request has been sent. You can check your wallet in 24 hours.`
+            title: 'Funds Added!',
+            description: `₹${parseFloat(amount).toFixed(2)} has been successfully added to your wallet.`
         });
         
         setIsSubmitting(false);
@@ -103,7 +108,7 @@ export default function AddFundsPage() {
                 <Alert>
                     <AlertTitle>Important!</AlertTitle>
                     <AlertDescription>
-                        After paying, enter the exact amount and the transaction ID (TXN ID) from your payment app.
+                        After paying, enter the exact amount and the transaction ID (TXN ID) from your payment app. Your funds will be added instantly.
                     </AlertDescription>
                 </Alert>
 
@@ -132,7 +137,7 @@ export default function AddFundsPage() {
                     </div>
                     <Button type="submit" className="w-full" disabled={isSubmitting}>
                       {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                      {isSubmitting ? 'Submitting...' : 'Submit Request'}
+                      {isSubmitting ? 'Submitting...' : 'Submit & Add Funds'}
                     </Button>
                 </form>
             </CardContent>

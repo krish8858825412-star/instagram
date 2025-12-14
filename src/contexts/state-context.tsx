@@ -102,10 +102,10 @@ const getReferralCodeFromStorage = () => {
     const params = new URLSearchParams(window.location.search);
     const ref = params.get('ref');
     if (ref) {
-        localStorage.setItem('referralCode', ref);
+        sessionStorage.setItem('referralCode', ref);
         return ref;
     }
-    return localStorage.getItem('referralCode');
+    return sessionStorage.getItem('referralCode');
 }
 
 // Create a provider component
@@ -131,14 +131,14 @@ export const GlobalStateProvider = ({ children }: { children: ReactNode }) => {
     if (authUser) {
       const userExists = users.some(u => u.id === authUser.uid);
       if (!userExists) {
-        const referralCodeInput = localStorage.getItem(`temp_ref_${authUser.uid}`);
+        const referralCodeInput = sessionStorage.getItem(`temp_ref_${authUser.uid}`);
         const referrer = users.find(u => u.referralCode === referralCodeInput);
 
         const newUser: User = {
           id: authUser.uid,
           name: authUser.displayName || `User ${authUser.uid.substring(0, 5)}`,
           email: authUser.email || '',
-          phone: authUser.phoneNumber || '', // This needs to be captured at sign-up
+          phone: '', // Will be populated from session storage
           date: new Date().toISOString(),
           referralCode: `${(authUser.displayName || 'USER').toUpperCase().replace(/\s/g, '').slice(0,4)}${Date.now().toString().slice(-4)}`,
           referredBy: referrer?.id,
@@ -146,16 +146,14 @@ export const GlobalStateProvider = ({ children }: { children: ReactNode }) => {
         
         // This is a workaround to get phone number from auth context on sign up
         // In a real app, this would be part of the same object
-        if (!newUser.phone) {
-             const tempPhone = localStorage.getItem(`temp_phone_${authUser.uid}`);
-             if (tempPhone) {
-                newUser.phone = tempPhone;
-                localStorage.removeItem(`temp_phone_${authUser.uid}`);
-             }
+        const tempPhone = sessionStorage.getItem(`temp_phone_${authUser.uid}`);
+        if (tempPhone) {
+            newUser.phone = tempPhone;
+            sessionStorage.removeItem(`temp_phone_${authUser.uid}`);
         }
         
         if (referralCodeInput) {
-            localStorage.removeItem(`temp_ref_${authUser.uid}`);
+            sessionStorage.removeItem(`temp_ref_${authUser.uid}`);
         }
 
 
@@ -187,7 +185,7 @@ export const GlobalStateProvider = ({ children }: { children: ReactNode }) => {
             };
             setMessages(prev => [...prev, welcomeMessage]);
             if (typeof window !== 'undefined') {
-              localStorage.removeItem('referralCode');
+              sessionStorage.removeItem('referralCode');
             }
             return [...prevUsers, newUser];
           }
@@ -198,7 +196,7 @@ export const GlobalStateProvider = ({ children }: { children: ReactNode }) => {
           if (!prevWallets.some(w => w.userId === authUser.uid)) {
             const newWallet: Wallet = {
               userId: authUser.uid,
-              name: authUser.displayName || `User ${authUser.uid.substring(0, 5)}`,
+              name: newUser.name,
               balance: 0,
               referralBalance: 0,
             };
@@ -209,7 +207,7 @@ export const GlobalStateProvider = ({ children }: { children: ReactNode }) => {
       }
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [authUser]);
+  }, [authUser, users]); // Added `users` dependency to correctly find referrer
 
   const addOrder = (order: Order) => {
     // Deduct price from wallet immediately on order creation
