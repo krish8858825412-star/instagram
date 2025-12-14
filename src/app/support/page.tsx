@@ -12,7 +12,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { cn } from '@/lib/utils';
+import { useTypewriter } from '@/hooks/use-typewriter';
 import {
   Dialog,
   DialogContent,
@@ -50,10 +50,18 @@ const faqData = [
 ];
 
 type Message = {
+    id: string;
     type: 'bot' | 'user' | 'options';
     text?: string;
     options?: typeof faqData;
+    isTyping?: boolean;
 }
+
+const BotMessage = ({ content }: { content: string }) => {
+    const typedContent = useTypewriter(content, 30);
+    return <p>{typedContent}</p>;
+};
+
 
 export default function SupportPage() {
     const { user, loading } = useAuth();
@@ -63,10 +71,13 @@ export default function SupportPage() {
     
     const [messages, setMessages] = useState<Message[]>([
         {
+            id: `msg-${Date.now()}-1`,
             type: 'bot',
-            text: "Hello! I'm here to help. Please select one of the common questions below, or open a support ticket if you need more assistance."
+            text: "Hello! I'm here to help. Please select one of the common questions below, or open a support ticket if you need more assistance.",
+            isTyping: true,
         },
         {
+            id: `msg-${Date.now()}-2`,
             type: 'options',
             options: faqData
         }
@@ -84,13 +95,12 @@ export default function SupportPage() {
     
     const handleQuestionSelect = (faqItem: typeof faqData[0]) => {
         setMessages(prev => {
-            // Remove the options from the chat
             const filteredPrev = prev.filter(p => p.type !== 'options');
             return [
                 ...filteredPrev,
-                { type: 'user', text: faqItem.question },
-                { type: 'bot', text: faqItem.answer },
-                { type: 'options', options: faqData } // Add options back at the end
+                { id: `msg-${Date.now()}-q`, type: 'user', text: faqItem.question },
+                { id: `msg-${Date.now()}-a`, type: 'bot', text: faqItem.answer, isTyping: true },
+                { id: `msg-${Date.now()}-o`, type: 'options', options: faqData }
             ];
         });
     };
@@ -102,7 +112,6 @@ export default function SupportPage() {
             description: "Your support request has been sent. We will get back to you shortly."
         });
         (e.target as HTMLFormElement).reset();
-        // Here you would typically close the dialog, which can be handled by the Dialog component itself
     };
 
     if (loading || !user) {
@@ -127,15 +136,15 @@ export default function SupportPage() {
             </CardHeader>
             <CardContent>
                 <div className="h-[400px] overflow-y-auto p-4 space-y-4 bg-muted/20 rounded-lg border">
-                    {messages.map((msg, index) => (
-                        <div key={index}>
+                    {messages.map((msg) => (
+                        <div key={msg.id}>
                             {msg.type === 'bot' && (
                                 <div className="flex items-end gap-2">
                                     <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-primary-foreground">
                                         <Bot className="h-5 w-5" />
                                     </div>
                                     <div className="max-w-[75%] rounded-lg bg-background p-3 text-sm shadow-md">
-                                        {msg.text}
+                                        {msg.text && msg.isTyping ? <BotMessage content={msg.text} /> : msg.text}
                                     </div>
                                 </div>
                             )}
