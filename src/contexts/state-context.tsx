@@ -114,46 +114,53 @@ export const GlobalStateProvider = ({ children }: { children: ReactNode }) => {
   // Effect to initialize or update user data when authUser changes
   useEffect(() => {
     if (authUser) {
-      setUsers(prevUsers => {
-        const userExists = prevUsers.some(u => u.id === authUser.uid);
-        if (!userExists) {
-          const newUser: User = {
-            id: authUser.uid,
-            name: authUser.displayName || `User ${authUser.uid.substring(0, 5)}`,
-            email: authUser.email || '',
-            phone: authUser.phoneNumber || '', // Will be empty from Firebase, but we keep the field
-            date: new Date().toISOString(),
-          };
-          addHistoryItem({
-            action: 'User Registered',
-            target: newUser.id,
-            user: newUser.name,
-            date: new Date().toISOString(),
-          });
-          setMessages(prev => [...prev, {
-              id: `msg-${Date.now()}`,
-              recipient: authUser.uid,
-              subject: "Welcome to Instagram!",
-              message: `Hi ${newUser.name}, welcome aboard! We're thrilled to have you. You can start by exploring our services or adding funds to your wallet.`,
-              date: new Date().toISOString(),
-          }]);
-          return [...prevUsers, newUser];
-        }
-        return prevUsers;
-      });
+      const userExists = users.some(u => u.id === authUser.uid);
+      if (!userExists) {
+        const newUser: User = {
+          id: authUser.uid,
+          name: authUser.displayName || `User ${authUser.uid.substring(0, 5)}`,
+          email: authUser.email || '',
+          phone: authUser.phoneNumber || '', // This will be updated by the sign up process now
+          date: new Date().toISOString(),
+        };
 
-      setWallets(prevWallets => {
-        const walletExists = prevWallets.some(w => w.userId === authUser.uid);
-        if (!walletExists) {
-          const newWallet: Wallet = {
-            userId: authUser.uid,
-            name: authUser.displayName || `User ${authUser.uid.substring(0, 5)}`,
-            balance: 0, // Start with 0 balance
-          };
-          return [...prevWallets, newWallet];
-        }
-        return prevWallets;
-      });
+        setUsers(prevUsers => {
+          // Double check to prevent race conditions
+          if (!prevUsers.some(u => u.id === authUser.uid)) {
+            const historyItem: HistoryItem = {
+              action: 'User Registered',
+              target: newUser.id,
+              user: newUser.name,
+              date: new Date().toISOString(),
+            };
+            setHistory(prev => [historyItem, ...prev]);
+
+            const welcomeMessage: Message = {
+                id: `msg-${Date.now()}`,
+                recipient: authUser.uid,
+                subject: "Welcome to Instagram!",
+                message: `Hi ${newUser.name}, welcome aboard! We're thrilled to have you. You can start by exploring our services or adding funds to your wallet.`,
+                date: new Date().toISOString(),
+            };
+            setMessages(prev => [...prev, welcomeMessage]);
+
+            return [...prevUsers, newUser];
+          }
+          return prevUsers;
+        });
+
+        setWallets(prevWallets => {
+          if (!prevWallets.some(w => w.userId === authUser.uid)) {
+            const newWallet: Wallet = {
+              userId: authUser.uid,
+              name: authUser.displayName || `User ${authUser.uid.substring(0, 5)}`,
+              balance: 0, // Start with 0 balance
+            };
+            return [...prevWallets, newWallet];
+          }
+          return prevWallets;
+        });
+      }
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [authUser]);
@@ -199,6 +206,13 @@ export const GlobalStateProvider = ({ children }: { children: ReactNode }) => {
             w.userId === originalRequest.userId ? { ...w, balance: w.balance + amountToAdd } : w
           )
         );
+         // Add to history for the user
+        addHistoryItem({
+          action: 'Added Funds',
+          target: `₹${amountToAdd.toFixed(2)}`,
+          user: originalRequest.user,
+          date: new Date().toISOString(),
+        });
       }
     }
   
@@ -259,7 +273,7 @@ export const GlobalStateProvider = ({ children }: { children: ReactNode }) => {
   const currentUserWallet = wallets.find(w => w.userId === authUser?.uid) || { userId: '', name: '', balance: 0 };
   
   const userMessages = authUser ? messages.filter(m => m.recipient === 'all' || m.recipient === authUser?.uid) : [];
-
+  
   const value = {
     users,
     orders,

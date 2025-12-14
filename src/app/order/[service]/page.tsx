@@ -56,7 +56,7 @@ export default function ServiceOrderPage() {
   const todaysOrders = getTodaysOrderCount(details.title);
   const dailyLimit = serviceLimits[details.title.toLowerCase() as keyof typeof serviceLimits] || 0;
   const isLimitReached = dailyLimit > 0 && todaysOrders >= dailyLimit;
-  const remainingOrders = dailyLimit > 0 ? dailyLimit - todaysOrders : Infinity;
+  const remainingOrders = dailyLimit > 0 ? Math.max(0, dailyLimit - todaysOrders) : Infinity;
 
 
   const price = (quantity / 10) * PRICE_PER_10_UNITS;

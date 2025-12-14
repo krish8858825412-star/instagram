@@ -7,15 +7,17 @@ import { useAuth } from '@/hooks/use-auth';
 import { Header } from '@/components/header';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { DollarSign, PlusCircle } from 'lucide-react';
+import { DollarSign, PlusCircle, MinusCircle, ShoppingCart } from 'lucide-react';
 import { useGlobalState } from '@/contexts/state-context';
 import { SplashScreen } from '@/components/splash-screen';
 import Link from 'next/link';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Badge } from '@/components/ui/badge';
 
 export default function WalletPage() {
   const { user, loading } = useAuth();
   const router = useRouter();
-  const { wallet } = useGlobalState();
+  const { wallet, history } = useGlobalState();
   
   useEffect(() => {
     if (!loading && !user) {
@@ -27,6 +29,10 @@ export default function WalletPage() {
   if (loading || !user) {
     return <SplashScreen />;
   }
+
+  const walletHistory = history.filter(item => 
+    item.user === (user?.displayName || 'User') && (item.action === 'Added Funds' || item.action === 'Placed Order')
+  ).sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
   return (
     <div className="flex min-h-screen w-full flex-col">
@@ -54,9 +60,47 @@ export default function WalletPage() {
                 </Button>
                 <div className="pt-6">
                     <h3 className="text-xl font-semibold mb-4">Transaction History</h3>
-                    <div className="border rounded-lg p-4 text-center bg-muted/20">
-                        <p className="text-muted-foreground">Transaction history will be shown here.</p>
-                    </div>
+                     {walletHistory.length > 0 ? (
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Type</TableHead>
+                            <TableHead>Details</TableHead>
+                            <TableHead className="text-right">Amount</TableHead>
+                            <TableHead>Date</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {walletHistory.map((item, index) => {
+                            const isCredit = item.action === 'Added Funds';
+                            return (
+                              <TableRow key={index}>
+                                <TableCell>
+                                    <Badge variant={isCredit ? 'default' : 'secondary'} className={isCredit ? 'bg-green-500/20 text-green-500 border-green-500/30' : 'bg-red-500/20 text-red-500 border-red-500/30'}>
+                                    {isCredit ? <PlusCircle className='mr-2' /> : <MinusCircle className='mr-2' />}
+                                    {isCredit ? 'Credit' : 'Debit'}
+                                  </Badge>
+                                </TableCell>
+                                <TableCell>
+                                  <div className="font-medium">{item.action}</div>
+                                  <div className="text-sm text-muted-foreground">
+                                    {isCredit ? `Fund Request Approved` : `Order ID: ${item.target}`}
+                                  </div>
+                                </TableCell>
+                                <TableCell className={`text-right font-semibold ${isCredit ? 'text-green-500' : 'text-red-500'}`}>
+                                  {isCredit ? '+' : '-'} {item.action === 'Placed Order' ? `₹${(wallet.balance - (wallet.balance + parseFloat(item.target.replace('₹','')))).toFixed(2)}` : item.target }
+                                </TableCell>
+                                <TableCell>{new Date(item.date).toLocaleString()}</TableCell>
+                              </TableRow>
+                            )
+                          })}
+                        </TableBody>
+                      </Table>
+                    ) : (
+                      <div className="border rounded-lg p-8 text-center bg-muted/20">
+                          <p className="text-muted-foreground">Your transaction history will appear here.</p>
+                      </div>
+                    )}
                 </div>
             </CardContent>
           </Card>
