@@ -27,7 +27,7 @@ export default function UserDetailPage() {
 
   if (!userData || !userData.user) {
     return (
-        <div className="flex min-h-screen w-full flex-col bg-muted/40 items-center justify-center">
+        <div className="flex min-h-screen w-full flex-col bg-transparent items-center justify-center">
             <p>User not found.</p>
         </div>
     )
@@ -51,7 +51,7 @@ export default function UserDetailPage() {
 
 
   return (
-    <div className="flex min-h-screen w-full flex-col bg-muted/40">
+    <div className="flex min-h-screen w-full flex-col bg-transparent">
        <header className="sticky top-0 z-30 flex h-16 items-center gap-4 border-b border-border/20 bg-background/50 px-4 backdrop-blur-lg md:px-6">
         <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => router.back()}>
             <ArrowLeft className="h-4 w-4" />
@@ -61,7 +61,7 @@ export default function UserDetailPage() {
       </header>
       <main className="flex flex-1 flex-col gap-4 p-4 md:gap-8 md:p-8">
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            <Card className="shadow-xl bg-card border-border/20">
+            <Card className="shadow-xl bg-card/10 backdrop-blur-lg border-border/20">
                 <CardHeader className="flex flex-row items-center justify-between pb-2">
                     <CardTitle className="text-sm font-medium">User Information</CardTitle>
                     <User className="h-4 w-4 text-muted-foreground" />
@@ -72,7 +72,7 @@ export default function UserDetailPage() {
                     <p className="text-xs text-muted-foreground">Joined: {new Date(user.date).toLocaleDateString()}</p>
                 </CardContent>
             </Card>
-             <Card className="shadow-xl bg-card border-border/20">
+             <Card className="shadow-xl bg-card/10 backdrop-blur-lg border-border/20">
                 <CardHeader className="flex flex-row items-center justify-between pb-2">
                     <CardTitle className="text-sm font-medium">Wallet Balance</CardTitle>
                     <Wallet className="h-4 w-4 text-muted-foreground" />
@@ -85,7 +85,7 @@ export default function UserDetailPage() {
         </div>
 
         <div className="grid gap-8">
-            <Card className="shadow-xl bg-card border-border/20">
+            <Card className="shadow-xl bg-card/10 backdrop-blur-lg border-border/20">
                 <CardHeader>
                     <div className='flex items-center gap-2'>
                         <ShoppingCart className="h-5 w-5 text-muted-foreground" />
@@ -121,7 +121,7 @@ export default function UserDetailPage() {
                 </CardContent>
             </Card>
 
-            <Card className="shadow-xl bg-card border-border/20">
+            <Card className="shadow-xl bg-card/10 backdrop-blur-lg border-border/20">
                 <CardHeader>
                     <div className='flex items-center gap-2'>
                         <Banknote className="h-5 w-5 text-muted-foreground" />
@@ -153,7 +153,7 @@ export default function UserDetailPage() {
                 </CardContent>
             </Card>
             
-            <Card className="shadow-xl bg-card border-border/20">
+            <Card className="shadow-xl bg-card/10 backdrop-blur-lg border-border/20">
                 <CardHeader>
                      <div className='flex items-center gap-2'>
                         <History className="h-5 w-5 text-muted-foreground" />
@@ -187,4 +187,3 @@ export default function UserDetailPage() {
     </div>
   );
 }
-

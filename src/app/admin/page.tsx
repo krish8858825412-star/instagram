@@ -83,7 +83,7 @@ export default function AdminPage() {
     switch(currentView) {
         case 'dashboard':
             return (
-                <Card className="shadow-xl bg-card border-border/20">
+                <Card className="shadow-xl bg-card/10 backdrop-blur-lg border-border/20">
                     <CardHeader>
                         <CardTitle>Analytics Dashboard</CardTitle>
                         <CardDescription>An overview of your application's activity.</CardDescription>
@@ -95,7 +95,7 @@ export default function AdminPage() {
             );
         case 'users':
             return (
-                <Card className="shadow-xl bg-card border-border/20">
+                <Card className="shadow-xl bg-card/10 backdrop-blur-lg border-border/20">
                     <CardHeader>
                         <CardTitle>User List</CardTitle>
                         <CardDescription>Manage all registered users. Click on a user to view their details.</CardDescription>
@@ -130,7 +130,7 @@ export default function AdminPage() {
             );
         case 'orders':
             return (
-                <Card className="shadow-xl bg-card border-border/20">
+                <Card className="shadow-xl bg-card/10 backdrop-blur-lg border-border/20">
                     <CardHeader>
                         <CardTitle>Order Management</CardTitle>
                         <CardDescription>Review incoming user orders. Pending orders are shown first.</CardDescription>
@@ -171,7 +171,7 @@ export default function AdminPage() {
             );
         case 'wallets':
             return (
-                <Card className="shadow-xl bg-card border-border/20">
+                <Card className="shadow-xl bg-card/10 backdrop-blur-lg border-border/20">
                     <CardHeader>
                         <CardTitle>User Wallets</CardTitle>
                         <CardDescription>View the current balance of all users.</CardDescription>
@@ -200,7 +200,7 @@ export default function AdminPage() {
             );
         case 'fund-requests':
             return (
-                <Card className="shadow-xl bg-card border-border/20">
+                <Card className="shadow-xl bg-card/10 backdrop-blur-lg border-border/20">
                     <CardHeader>
                         <CardTitle>Fund Requests</CardTitle>
                         <CardDescription>Approve or decline user requests to add funds. Pending requests are shown first.</CardDescription>
@@ -239,7 +239,7 @@ export default function AdminPage() {
             );
         case 'all-history':
             return (
-                <Card className="shadow-xl bg-card border-border/20">
+                <Card className="shadow-xl bg-card/10 backdrop-blur-lg border-border/20">
                     <CardHeader>
                         <CardTitle>Action History</CardTitle>
                         <CardDescription>A log of all important actions taken in the system.</CardDescription>
@@ -270,7 +270,7 @@ export default function AdminPage() {
             );
         case 'inbox':
              return (
-                <Card className="shadow-xl bg-card border-border/20">
+                <Card className="shadow-xl bg-card/10 backdrop-blur-lg border-border/20">
                     <CardHeader>
                         <CardTitle>Send a Message</CardTitle>
                         <CardDescription>Compose a message to be sent to all users' inboxes.</CardDescription>
@@ -292,7 +292,7 @@ export default function AdminPage() {
             );
         case 'settings':
             return (
-               <Card className="shadow-xl bg-card border-border/20">
+               <Card className="shadow-xl bg-card/10 backdrop-blur-lg border-border/20">
                    <CardHeader>
                        <CardTitle>Application Settings</CardTitle>
                        <CardDescription>Configure global settings for the application.</CardDescription>
@@ -348,7 +348,7 @@ export default function AdminPage() {
            );
         case 'support':
              return (
-                <Card className="shadow-xl bg-card border-border/20">
+                <Card className="shadow-xl bg-card/10 backdrop-blur-lg border-border/20">
                     <CardHeader>
                         <CardTitle>Support Center</CardTitle>
                         <CardDescription>Manage user support tickets here. This feature is coming soon.</CardDescription>
@@ -367,7 +367,7 @@ export default function AdminPage() {
   }
 
   return (
-    <div className="flex min-h-screen w-full flex-col bg-muted/40">
+    <div className="flex min-h-screen w-full flex-col bg-transparent">
       <header className="sticky top-0 z-30 flex h-16 items-center gap-4 border-b border-border/20 bg-background/50 px-4 backdrop-blur-lg md:px-6">
         <h1 className="text-xl font-bold">Admin Panel</h1>
       </header>
@@ -414,5 +414,3 @@ export default function AdminPage() {
     </div>
   );
 }
-
-    

@@ -25,7 +25,7 @@ export default function HomePage() {
 
   if (loading || !user) {
     return (
-      <div className="flex h-screen w-full items-center justify-center bg-background">
+      <div className="flex h-screen w-full items-center justify-center bg-transparent">
         <Skeleton className="h-screen w-full bg-transparent" />
       </div>
     );
@@ -41,7 +41,7 @@ export default function HomePage() {
   const pendingOrders = orders.filter(o => o.status === 'Pending').length;
 
   return (
-    <div className="flex min-h-screen w-full flex-col">
+    <div className="flex min-h-screen w-full flex-col bg-transparent">
       <Header />
       <main className="flex flex-1 flex-col gap-8 p-4 md:gap-8 md:p-8">
         <div className="flex items-center">

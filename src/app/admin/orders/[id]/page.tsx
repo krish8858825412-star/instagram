@@ -47,14 +47,14 @@ export default function OrderDetailPage() {
   
   if (!order) {
     return (
-        <div className="flex min-h-screen w-full flex-col bg-muted/40 items-center justify-center">
+        <div className="flex min-h-screen w-full flex-col bg-transparent items-center justify-center">
             <p>Order not found.</p>
         </div>
     )
   }
   
   return (
-    <div className="flex min-h-screen w-full flex-col bg-muted/40">
+    <div className="flex min-h-screen w-full flex-col bg-transparent">
        <header className="sticky top-0 z-30 flex h-16 items-center gap-4 border-b border-border/20 bg-background/50 px-4 backdrop-blur-lg md:px-6">
         <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => router.back()}>
             <ArrowLeft className="h-4 w-4" />
@@ -64,7 +64,7 @@ export default function OrderDetailPage() {
       </header>
       <main className="flex flex-1 flex-col items-center gap-4 p-4 md:gap-8 md:p-8">
         <div className="w-full max-w-4xl">
-          <Card className="shadow-xl bg-card border-border/20">
+          <Card className="shadow-xl bg-card/10 backdrop-blur-lg border-border/20">
             <CardHeader>
               <CardTitle>Order #{order.id}</CardTitle>
               <CardDescription>
