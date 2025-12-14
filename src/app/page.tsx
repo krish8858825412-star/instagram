@@ -25,12 +25,13 @@ import {
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { LogoIcon } from "@/components/icons";
-import { Loader2, Mail, Lock, User as UserIcon } from "lucide-react";
+import { Loader2, Mail, Lock, User as UserIcon, Phone } from "lucide-react";
 import { SplashScreen } from "@/components/splash-screen";
 
 const signUpSchema = z.object({
   name: z.string().min(2, { message: "Name must be at least 2 characters." }),
   email: z.string().email({ message: "Invalid email address." }),
+  phone: z.string().min(10, { message: "Phone number must be at least 10 digits." }),
   password: z
     .string()
     .min(6, { message: "Password must be at least 6 characters." }),
@@ -71,6 +72,7 @@ export default function AuthPage() {
     defaultValues: {
       name: "",
       email: "",
+      phone: "",
       password: "",
     },
   });
@@ -89,8 +91,8 @@ export default function AuthPage() {
     setIsSubmitting(true);
     try {
       if (isSigningUp) {
-        const { name, email, password } = values as z.infer<typeof signUpSchema>;
-        await signUp(name, email, password);
+        const { name, email, password, phone } = values as z.infer<typeof signUpSchema>;
+        await signUp(name, email, password, phone);
         toast({
           title: "Success",
           description: "Account created successfully. Please sign in.",
@@ -170,21 +172,38 @@ export default function AuthPage() {
                 <Form {...form}>
                   <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                     {isSigningUp && (
-                      <div className="relative">
-                        <UserIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-                        <FormField
-                          control={form.control}
-                          name="name"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormControl>
-                                <Input placeholder="Full Name" {...field} className="pl-10" />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      </div>
+                       <>
+                        <div className="relative">
+                            <UserIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                            <FormField
+                            control={form.control}
+                            name="name"
+                            render={({ field }) => (
+                                <FormItem>
+                                <FormControl>
+                                    <Input placeholder="Full Name" {...field} className="pl-10" />
+                                </FormControl>
+                                <FormMessage />
+                                </FormItem>
+                            )}
+                            />
+                        </div>
+                        <div className="relative">
+                            <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                            <FormField
+                            control={form.control}
+                            name="phone"
+                            render={({ field }) => (
+                                <FormItem>
+                                <FormControl>
+                                    <Input type="tel" placeholder="Phone Number" {...field} className="pl-10" />
+                                </FormControl>
+                                <FormMessage />
+                                </FormItem>
+                            )}
+                            />
+                        </div>
+                      </>
                     )}
                     <div className="relative">
                       <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />

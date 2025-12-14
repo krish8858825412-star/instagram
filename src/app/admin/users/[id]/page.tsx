@@ -69,6 +69,7 @@ export default function UserDetailPage() {
                 <CardContent>
                     <p className="text-2xl font-bold">{user.name}</p>
                     <p className="text-xs text-muted-foreground">{user.email}</p>
+                    <p className="text-xs text-muted-foreground">{user.phone}</p>
                     <p className="text-xs text-muted-foreground">Joined: {new Date(user.date).toLocaleDateString()}</p>
                 </CardContent>
             </Card>

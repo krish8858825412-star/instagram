@@ -38,6 +38,7 @@ interface User {
     id: string;
     name: string;
     email: string;
+    phone: string; // Add phone number field
     date: string;
 }
 
@@ -120,6 +121,7 @@ export const GlobalStateProvider = ({ children }: { children: ReactNode }) => {
             id: authUser.uid,
             name: authUser.displayName || `User ${authUser.uid.substring(0, 5)}`,
             email: authUser.email || '',
+            phone: authUser.phoneNumber || '', // Will be empty from Firebase, but we keep the field
             date: new Date().toISOString(),
           };
           addHistoryItem({

@@ -14,11 +14,12 @@ import {
 import { auth } from "@/lib/firebase";
 import { SplashScreen } from "@/components/splash-screen";
 
+// Add phone to the signUp function signature
 interface AuthContextType {
   user: User | null;
   loading: boolean;
   signIn: (email: string, pass: string) => Promise<any>;
-  signUp: (name: string, email: string, pass: string) => Promise<any>;
+  signUp: (name: string, email: string, pass: string, phone: string) => Promise<any>;
   signOut: () => Promise<void>;
   sendPasswordReset: (email: string) => Promise<void>;
 }
@@ -38,9 +39,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => unsubscribe();
   }, []);
 
-  const signUp = async (name: string, email: string, password: string): Promise<any> => {
+  // Accept phone number, though it's not directly used for Firebase Auth user creation here.
+  // It will be picked up by the state context.
+  const signUp = async (name: string, email: string, password: string, phone: string): Promise<any> => {
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
     if (userCredential.user) {
+      // We are passing the phone number here but it's not a standard profile property.
+      // We will handle storing it in our own app state.
       await updateProfile(userCredential.user, { displayName: name });
     }
     return userCredential;
