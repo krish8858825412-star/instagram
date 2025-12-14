@@ -12,7 +12,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { LifeBuoy, LogOut, Moon, Sun, Wallet, Inbox, Package } from "lucide-react";
+import { Info, LogOut, Moon, Sun, Wallet, Inbox, Package } from "lucide-react";
 import { LogoIcon } from "./icons";
 import { useTheme } from "next-themes";
 import Link from "next/link";
@@ -84,9 +84,9 @@ export function Header() {
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
-                <Link href="/support">
-                    <LifeBuoy className="mr-2 h-4 w-4" />
-                    <span>Support</span>
+                <Link href="/about">
+                    <Info className="mr-2 h-4 w-4" />
+                    <span>About App</span>
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
