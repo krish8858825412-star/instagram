@@ -38,16 +38,20 @@ export function AdminChart({ users, orders }: AdminChartProps) {
     const dataByDate: { [key: string]: { date: string; users: number; orders: number } } = {};
     const today = new Date();
     
+    // Initialize data for the last 7 days
     for (let i = 6; i >= 0; i--) {
-      const date = new Date(today);
+      const date = new Date();
       date.setDate(today.getDate() - i);
       const formattedDate = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
       dataByDate[formattedDate] = { date: formattedDate, users: 0, orders: 0 };
     }
 
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(today.getDate() - 7);
+
     users.forEach(user => {
       const userDate = new Date(user.date);
-      if (userDate >= new Date(today.setDate(today.getDate() - 7))) {
+      if (userDate >= sevenDaysAgo) {
         const formattedDate = userDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
         if (dataByDate[formattedDate]) {
           dataByDate[formattedDate].users += 1;
@@ -57,17 +61,14 @@ export function AdminChart({ users, orders }: AdminChartProps) {
 
     orders.forEach(order => {
       const orderDate = new Date(order.date);
-       if (orderDate >= new Date(today.setDate(today.getDate() - 7))) {
+       if (orderDate >= sevenDaysAgo) {
         const formattedDate = orderDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-        if (dataByByDate[formattedDate]) {
+        if (dataByDate[formattedDate]) {
           dataByDate[formattedDate].orders += 1;
         }
       }
     });
     
-    // This is to reset the date after manipulation
-    today.setDate(today.getDate() + 7);
-
     return Object.values(dataByDate);
   }, [users, orders]);
 
@@ -123,7 +124,7 @@ export function AdminChart({ users, orders }: AdminChartProps) {
                             tickLine={false}
                             tickMargin={10}
                             axisLine={false}
-                            tickFormatter={(value) => value.slice(0, 3)}
+                            tickFormatter={(value) => value}
                         />
                         <ChartTooltip content={<ChartTooltipContent />} />
                         <Legend />

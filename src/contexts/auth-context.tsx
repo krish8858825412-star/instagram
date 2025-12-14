@@ -48,7 +48,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // In a real app with a backend, this would be a single atomic operation
       if(typeof window !== 'undefined'){
           sessionStorage.setItem(`temp_phone_${userCredential.user.uid}`, phone);
-          if(referralCode) {
+          if(referralCode && referralCode.trim() !== '') {
             sessionStorage.setItem(`temp_ref_${userCredential.user.uid}`, referralCode);
           }
       }

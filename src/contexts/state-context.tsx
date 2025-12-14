@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
 import { useAuth } from '@/hooks/use-auth';
 
 // Define types for the state
@@ -96,18 +96,6 @@ interface GlobalState {
 // Create the context
 const GlobalStateContext = createContext<GlobalState | undefined>(undefined);
 
-// Helper function to get referral code from local storage
-const getReferralCodeFromStorage = () => {
-    if (typeof window === 'undefined') return null;
-    const params = new URLSearchParams(window.location.search);
-    const ref = params.get('ref');
-    if (ref) {
-        sessionStorage.setItem('referralCode', ref);
-        return ref;
-    }
-    return sessionStorage.getItem('referralCode');
-}
-
 // Create a provider component
 export const GlobalStateProvider = ({ children }: { children: ReactNode }) => {
   const { user: authUser } = useAuth();
@@ -126,74 +114,75 @@ export const GlobalStateProvider = ({ children }: { children: ReactNode }) => {
     views: 1000,
   });
 
+   const addHistoryItem = useCallback((item: HistoryItem) => {
+    setHistory(prev => [item, ...prev]);
+  }, []);
+
   // Effect to initialize or update user data when authUser changes
   useEffect(() => {
     if (authUser) {
       const userExists = users.some(u => u.id === authUser.uid);
       if (!userExists) {
-        const referralCodeInput = sessionStorage.getItem(`temp_ref_${authUser.uid}`);
-        const referrer = users.find(u => u.referralCode === referralCodeInput);
-
-        const newUser: User = {
-          id: authUser.uid,
-          name: authUser.displayName || `User ${authUser.uid.substring(0, 5)}`,
-          email: authUser.email || '',
-          phone: '', // Will be populated from session storage
-          date: new Date().toISOString(),
-          referralCode: `${(authUser.displayName || 'USER').toUpperCase().replace(/\s/g, '').slice(0, 4)}${Math.random().toString(36).substring(2, 6).toUpperCase()}`,
-          referredBy: referrer?.id,
-        };
         
-        const tempPhone = sessionStorage.getItem(`temp_phone_${authUser.uid}`);
-        if (tempPhone) {
-            newUser.phone = tempPhone;
-            sessionStorage.removeItem(`temp_phone_${authUser.uid}`);
-        }
-        
-        if (referralCodeInput) {
-            sessionStorage.removeItem(`temp_ref_${authUser.uid}`);
-        }
-
         setUsers(prevUsers => {
-          if (!prevUsers.some(u => u.id === authUser.uid)) {
-            const historyItem: HistoryItem = {
-              action: 'User Registered',
-              target: newUser.id,
-              user: newUser.name,
-              date: new Date().toISOString(),
-            };
-            setHistory(prev => [historyItem, ...prev]);
+          // Check again inside setter to prevent race conditions
+          if (prevUsers.some(u => u.id === authUser.uid)) return prevUsers;
+          
+          const referralCodeInput = sessionStorage.getItem(`temp_ref_${authUser.uid}`);
+          const referrer = prevUsers.find(u => u.referralCode === referralCodeInput);
 
-            if (referrer) {
-                 addHistoryItem({
-                    action: 'Referred New User',
-                    target: newUser.name,
-                    user: referrer.name,
-                    date: new Date().toISOString(),
-                });
-            }
+          const newUser: User = {
+            id: authUser.uid,
+            name: authUser.displayName || `User ${authUser.uid.substring(0, 5)}`,
+            email: authUser.email || '',
+            phone: '', 
+            date: new Date().toISOString(),
+            referralCode: `${(authUser.displayName || 'USER').toUpperCase().replace(/\s/g, '').slice(0, 4)}${Math.random().toString(36).substring(2, 6).toUpperCase()}`,
+            referredBy: referrer?.id,
+          };
 
-            const welcomeMessage: Message = {
-                id: `msg-${Date.now()}`,
-                recipient: authUser.uid,
-                subject: "Welcome to Instagram!",
-                message: `Hi ${newUser.name}, welcome aboard! We're thrilled to have you. You can start by exploring our services or adding funds to your wallet.`,
-                date: new Date().toISOString(),
-            };
-            setMessages(prev => [...prev, welcomeMessage]);
-            if (typeof window !== 'undefined') {
-              sessionStorage.removeItem('referralCode');
-            }
-            return [...prevUsers, newUser];
+          const tempPhone = sessionStorage.getItem(`temp_phone_${authUser.uid}`);
+          if (tempPhone) {
+              newUser.phone = tempPhone;
+              sessionStorage.removeItem(`temp_phone_${authUser.uid}`);
           }
-          return prevUsers;
+          if (referralCodeInput) {
+              sessionStorage.removeItem(`temp_ref_${authUser.uid}`);
+          }
+
+          addHistoryItem({
+            action: 'User Registered',
+            target: newUser.id,
+            user: newUser.name,
+            date: new Date().toISOString(),
+          });
+
+          if (referrer) {
+               addHistoryItem({
+                  action: 'Referred New User',
+                  target: newUser.name,
+                  user: referrer.name,
+                  date: new Date().toISOString(),
+              });
+          }
+
+          const welcomeMessage: Message = {
+              id: `msg-${Date.now()}`,
+              recipient: authUser.uid,
+              subject: "Welcome to Instagram!",
+              message: `Hi ${newUser.name}, welcome aboard! We're thrilled to have you. You can start by exploring our services or adding funds to your wallet.`,
+              date: new Date().toISOString(),
+          };
+          setMessages(prev => [...prev, welcomeMessage]);
+          
+          return [...prevUsers, newUser];
         });
 
         setWallets(prevWallets => {
           if (!prevWallets.some(w => w.userId === authUser.uid)) {
             const newWallet: Wallet = {
               userId: authUser.uid,
-              name: newUser.name,
+              name: authUser.displayName || `User ${authUser.uid.substring(0, 5)}`,
               balance: 0,
               referralBalance: 0,
             };
@@ -203,8 +192,7 @@ export const GlobalStateProvider = ({ children }: { children: ReactNode }) => {
         });
       }
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [authUser]);
+  }, [authUser, users, addHistoryItem]);
 
   const addOrder = (order: Order) => {
     // Deduct price from wallet immediately on order creation
@@ -283,9 +271,6 @@ export const GlobalStateProvider = ({ children }: { children: ReactNode }) => {
     ));
   };
 
-  const addHistoryItem = (item: HistoryItem) => {
-    setHistory(prev => [item, ...prev]);
-  }
 
   const sendMessageToAll = (subject: string, message: string) => {
     const newMessage: Message = {
