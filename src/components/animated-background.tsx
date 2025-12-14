@@ -11,8 +11,8 @@ export function AnimatedBackground() {
       )}
       style={{
         background: `
-          radial-gradient(circle at 30% 40%, rgba(217, 70, 239, 0.25), transparent 40%),
-          radial-gradient(circle at 70% 60%, rgba(56, 189, 248, 0.25), transparent 40%)
+          radial-gradient(circle at 10% 20%, rgba(217, 70, 239, 0.2), transparent 70%),
+          radial-gradient(circle at 90% 80%, rgba(56, 189, 248, 0.2), transparent 70%)
         `,
       }}
     />
