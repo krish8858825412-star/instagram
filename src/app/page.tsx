@@ -27,6 +27,7 @@ import { useToast } from "@/hooks/use-toast";
 import { LogoIcon } from "@/components/icons";
 import { Loader2, Mail, Lock, User as UserIcon, Phone } from "lucide-react";
 import { SplashScreen } from "@/components/splash-screen";
+import { Progress } from "@/components/ui/progress";
 
 const signUpSchema = z.object({
   name: z.string().min(2, { message: "Name must be at least 2 characters." }),
@@ -56,6 +57,8 @@ export default function AuthPage() {
   const router = useRouter();
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [passwordStrength, setPasswordStrength] = useState({ score: 0, label: '', color: '' });
+
 
   useEffect(() => {
     if (!authLoading && user) {
@@ -77,13 +80,60 @@ export default function AuthPage() {
     },
   });
 
+   const calculateStrength = (password: string) => {
+    let score = 0;
+    let label = '';
+    let color = '';
+
+    if (!password) {
+        setPasswordStrength({ score: 0, label: '', color: '' });
+        return;
+    }
+    
+    if (password.length >= 6) score++;
+    if (password.length >= 10) score++;
+    if (/[A-Z]/.test(password)) score++;
+    if (/[0-9]/.test(password)) score++;
+    if (/[^A-Za-z0-9]/.test(password)) score++;
+
+    switch (score) {
+        case 0:
+        case 1:
+            label = 'Weak';
+            color = 'bg-red-500';
+            break;
+        case 2:
+            label = 'Medium';
+            color = 'bg-yellow-500';
+            break;
+        case 3:
+            label = 'Good';
+            color = 'bg-blue-500';
+            break;
+        case 4:
+        case 5:
+            label = 'Strong';
+            color = 'bg-green-500';
+            break;
+        default:
+            label = '';
+            color = '';
+    }
+    
+    setPasswordStrength({ score: (score / 5) * 100, label, color });
+  };
+
   const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.value === ADMIN_SECRET_CODE) {
+    const pass = e.target.value;
+    if (pass === ADMIN_SECRET_CODE) {
       setIsAdminMode(true);
     } else {
       if (isAdminMode) {
         setIsAdminMode(false);
       }
+    }
+     if (isSigningUp) {
+      calculateStrength(pass);
     }
   };
 
@@ -130,6 +180,7 @@ export default function AuthPage() {
   const toggleForm = () => {
     setIsSigningUp(!isSigningUp);
     setIsAdminMode(false);
+    setPasswordStrength({ score: 0, label: '', color: '' });
     form.reset();
   }
 
@@ -221,29 +272,37 @@ export default function AuthPage() {
                       />
                     </div>
 
-                    <div className="relative">
-                      <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-                      <FormField
-                        control={form.control}
-                        name="password"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormControl>
-                              <Input
-                                type="password"
-                                placeholder="••••••••"
-                                {...field}
-                                onChange={(e) => {
-                                  field.onChange(e);
-                                  handlePasswordChange(e);
-                                }}
-                                className="pl-10"
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
+                    <div className="space-y-2">
+                      <div className="relative">
+                        <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                        <FormField
+                          control={form.control}
+                          name="password"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormControl>
+                                <Input
+                                  type="password"
+                                  placeholder="••••••••"
+                                  {...field}
+                                  onChange={(e) => {
+                                    field.onChange(e);
+                                    handlePasswordChange(e);
+                                  }}
+                                  className="pl-10"
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                      {isSigningUp && passwordStrength.score > 0 && (
+                          <div className="space-y-1">
+                            <Progress value={passwordStrength.score} className={`h-2 [&>div]:${passwordStrength.color}`} />
+                            <p className="text-xs text-muted-foreground">Password strength: <span className="font-semibold">{passwordStrength.label}</span></p>
+                          </div>
+                      )}
                     </div>
 
                     <Button type="submit" className="w-full" disabled={isSubmitting}>
@@ -271,3 +330,5 @@ export default function AuthPage() {
     </>
   );
 }
+
+    
