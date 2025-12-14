@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ArrowLeft, CheckCircle, ClipboardPaste, Info, Loader2, Wallet, XCircle } from "lucide-react";
+import { ArrowLeft, ArrowRightLeft, CheckCircle, ClipboardPaste, Info, Loader2, Wallet, XCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { OrderPlacedDialog } from "@/components/order-placed-dialog";
 import { useGlobalState } from "@/contexts/state-context";
@@ -44,8 +44,10 @@ export default function ServiceOrderPage() {
 
   const [link, setLink] = useState("");
   const [quantity, setQuantity] = useState(details.step);
+  const [price, setPrice] = useState((details.step / 10) * PRICE_PER_10_UNITS);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuccessDialog, setShowSuccessDialog] = useState(false);
+  const [inputMode, setInputMode] = useState<'quantity' | 'price'>('quantity');
 
   useEffect(() => {
     if (!loading && !user) {
@@ -58,8 +60,6 @@ export default function ServiceOrderPage() {
   const isLimitReached = dailyLimit > 0 && todaysOrders >= dailyLimit;
   const remainingOrders = dailyLimit > 0 ? Math.max(0, dailyLimit - todaysOrders) : Infinity;
 
-
-  const price = (quantity / 10) * PRICE_PER_10_UNITS;
   const hasSufficientFunds = wallet.balance >= price;
 
   const handleLinkChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -83,6 +83,24 @@ export default function ServiceOrderPage() {
     }
   }
 
+  const handleQuantityChange = (q: number) => {
+    const newQuantity = Math.max(0, q);
+    setQuantity(newQuantity);
+    const newPrice = (newQuantity / 10) * PRICE_PER_10_UNITS;
+    setPrice(newPrice);
+  }
+  
+  const handlePriceChange = (p: number) => {
+    const newPrice = Math.max(0, p);
+    setPrice(newPrice);
+    const newQuantity = Math.floor((newPrice / PRICE_PER_10_UNITS) * 10);
+    setQuantity(newQuantity);
+  }
+  
+  const toggleInputMode = () => {
+      setInputMode(prev => prev === 'quantity' ? 'price' : 'quantity');
+  }
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -101,6 +119,14 @@ export default function ServiceOrderPage() {
         variant: "destructive",
         title: "No Link Provided",
         description: "Please enter a link to your content.",
+      });
+      return;
+    }
+     if (quantity <= 0 || price <= 0) {
+      toast({
+        variant: "destructive",
+        title: "Invalid Amount",
+        description: "Please enter a valid quantity or price.",
       });
       return;
     }
@@ -200,21 +226,44 @@ export default function ServiceOrderPage() {
                     </div>
                   </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="quantity">Quantity</Label>
-                    <Input
-                      id="quantity"
-                      type="number"
-                      value={quantity}
-                      onChange={(e) => setQuantity(Math.max(0, parseInt(e.target.value) || 0))}
-                      min={details.step}
-                      step={details.step}
-                      required
-                    />
-                    <p className="text-xs text-muted-foreground">
-                        Minimum order is {details.step} {details.unit} (for ₹{((details.step / 10) * PRICE_PER_10_UNITS).toFixed(2)}).
-                    </p>
+                  <div className="flex items-center gap-2">
+                    <div className="flex-1 space-y-2">
+                      <Label htmlFor={inputMode === 'quantity' ? 'quantity' : 'price'}>
+                        {inputMode === 'quantity' ? 'Quantity' : 'Price (₹)'}
+                      </Label>
+                      <Input
+                        id={inputMode === 'quantity' ? 'quantity' : 'price'}
+                        type="number"
+                        value={inputMode === 'quantity' ? quantity : price}
+                        onChange={(e) => inputMode === 'quantity' ? handleQuantityChange(parseInt(e.target.value, 10)) : handlePriceChange(parseFloat(e.target.value))}
+                        min={inputMode === 'quantity' ? details.step : (details.step / 10) * PRICE_PER_10_UNITS}
+                        step={inputMode === 'quantity' ? details.step : 1}
+                        required
+                      />
+                    </div>
+                    
+                    <Button type="button" variant="ghost" size="icon" onClick={toggleInputMode} className="mt-6 self-end">
+                      <ArrowRightLeft className="h-5 w-5" />
+                      <span className="sr-only">Switch input mode</span>
+                    </Button>
+
+                    <div className="flex-1 space-y-2">
+                      <Label htmlFor={inputMode === 'quantity' ? 'price-display' : 'quantity-display'}>
+                         {inputMode === 'quantity' ? 'Price (₹)' : 'Quantity'}
+                      </Label>
+                       <Input
+                        id={inputMode === 'quantity' ? 'price-display' : 'quantity-display'}
+                        type="text"
+                        value={inputMode === 'quantity' ? `~ ₹${price.toFixed(2)}` : `~ ${quantity.toLocaleString()} ${details.unit}`}
+                        readOnly
+                        disabled
+                        className="bg-muted/50"
+                      />
+                    </div>
                   </div>
+                  <p className="text-xs text-muted-foreground text-center">
+                      Minimum order is {details.step} {details.unit} (for ₹{((details.step / 10) * PRICE_PER_10_UNITS).toFixed(2)}).
+                  </p>
                    <Card className="bg-muted/50 border-dashed">
                     <CardHeader className="flex-row items-center justify-between p-4">
                       <div className="flex items-center gap-2">
@@ -227,12 +276,12 @@ export default function ServiceOrderPage() {
                 </CardContent>
                 <CardFooter className="flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
                   <div className="flex items-baseline gap-2">
-                    <span className="text-muted-foreground">Price:</span>
+                    <span className="text-muted-foreground">Final Price:</span>
                     <span className="text-3xl font-bold">
                       ₹{price.toFixed(2)}
                     </span>
                   </div>
-                  <Button type="submit" size="lg" className="w-full sm:w-auto" disabled={isSubmitting || !link || !hasSufficientFunds || isLimitReached}>
+                  <Button type="submit" size="lg" className="w-full sm:w-auto" disabled={isSubmitting || !link || !hasSufficientFunds || isLimitReached || quantity <= 0}>
                     {isSubmitting ? (
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     ) : (
@@ -256,3 +305,5 @@ export default function ServiceOrderPage() {
     </>
   );
 }
+
+    
