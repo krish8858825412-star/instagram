@@ -32,14 +32,17 @@ interface Wallet {
     userId: string;
     name: string;
     balance: number;
+    referralBalance: number;
 }
 
 interface User {
     id: string;
     name: string;
     email: string;
-    phone: string; // Add phone number field
+    phone: string;
     date: string;
+    referralCode: string;
+    referredBy?: string;
 }
 
 interface HistoryItem {
@@ -75,6 +78,7 @@ interface GlobalState {
   messages: Message[];
   qrCodeUrl: string;
   serviceLimits: ServiceLimits;
+  getReferredUsers: (userId: string) => User[];
   getUserData: (userId: string) => { user: User | undefined; wallet: Wallet | undefined; userOrders: Order[]; userFundRequests: FundRequest[]; userHistory: HistoryItem[] };
   getTodaysOrderCount: (service: string) => number;
   addOrder: (order: Order) => void;
@@ -86,6 +90,7 @@ interface GlobalState {
   clearInbox: () => void;
   setQrCodeUrl: (url: string) => void;
   setServiceLimits: (limits: ServiceLimits) => void;
+  withdrawReferralEarnings: (userId: string) => void;
 }
 
 // Create the context
@@ -116,12 +121,19 @@ export const GlobalStateProvider = ({ children }: { children: ReactNode }) => {
     if (authUser) {
       const userExists = users.some(u => u.id === authUser.uid);
       if (!userExists) {
+        // A real app would get referral code from URL params or local storage during sign up
+        // For now, we'll simulate it.
+        const referralCodeInput = 'TESTREF1'; // This would be dynamic
+        const referrer = users.find(u => u.referralCode === referralCodeInput);
+
         const newUser: User = {
           id: authUser.uid,
           name: authUser.displayName || `User ${authUser.uid.substring(0, 5)}`,
           email: authUser.email || '',
-          phone: authUser.phoneNumber || '', // This will be updated by the sign up process now
+          phone: authUser.phoneNumber || '',
           date: new Date().toISOString(),
+          referralCode: `${(authUser.displayName || 'USER').toUpperCase()}${Date.now().toString().slice(-4)}`,
+          referredBy: referrer?.id,
         };
 
         setUsers(prevUsers => {
@@ -134,6 +146,15 @@ export const GlobalStateProvider = ({ children }: { children: ReactNode }) => {
               date: new Date().toISOString(),
             };
             setHistory(prev => [historyItem, ...prev]);
+
+            if (referrer) {
+                 addHistoryItem({
+                    action: 'Referred New User',
+                    target: newUser.name,
+                    user: referrer.name,
+                    date: new Date().toISOString(),
+                });
+            }
 
             const welcomeMessage: Message = {
                 id: `msg-${Date.now()}`,
@@ -154,7 +175,8 @@ export const GlobalStateProvider = ({ children }: { children: ReactNode }) => {
             const newWallet: Wallet = {
               userId: authUser.uid,
               name: authUser.displayName || `User ${authUser.uid.substring(0, 5)}`,
-              balance: 0, // Start with 0 balance
+              balance: 0,
+              referralBalance: 0,
             };
             return [...prevWallets, newWallet];
           }
@@ -197,7 +219,6 @@ export const GlobalStateProvider = ({ children }: { children: ReactNode }) => {
     const originalRequest = fundRequests.find(req => req.id === requestId);
     if (!originalRequest) return;
   
-    // Only process wallet change if status is changing to "Approved"
     if (updates.status === 'Approved' && originalRequest.status !== 'Approved') {
       const amountToAdd = approvedAmount !== undefined ? approvedAmount : originalRequest.amount;
       if (amountToAdd > 0) {
@@ -206,17 +227,39 @@ export const GlobalStateProvider = ({ children }: { children: ReactNode }) => {
             w.userId === originalRequest.userId ? { ...w, balance: w.balance + amountToAdd } : w
           )
         );
-         // Add to history for the user
+        
         addHistoryItem({
           action: 'Added Funds',
           target: `₹${amountToAdd.toFixed(2)}`,
           user: originalRequest.user,
           date: new Date().toISOString(),
         });
+        
+        // --- Referral Logic ---
+        const userWhoPaid = users.find(u => u.id === originalRequest.userId);
+        if (userWhoPaid?.referredBy) {
+          const referrerId = userWhoPaid.referredBy;
+          const commission = amountToAdd * 0.07;
+          
+          setWallets(prevWallets =>
+            prevWallets.map(w =>
+              w.userId === referrerId ? { ...w, referralBalance: w.referralBalance + commission } : w
+            )
+          );
+          
+          const referrer = users.find(u => u.id === referrerId);
+          if (referrer) {
+              addHistoryItem({
+                action: 'Referral Commission',
+                target: `+₹${commission.toFixed(2)} from ${userWhoPaid.name}`,
+                user: referrer.name,
+                date: new Date().toISOString(),
+              });
+          }
+        }
       }
     }
   
-    // Update the request in the state
     setFundRequests(prev => prev.map(req => 
         req.id === requestId ? { ...req, ...updates, amount: approvedAmount !== undefined ? approvedAmount : req.amount } : req
     ));
@@ -270,7 +313,26 @@ export const GlobalStateProvider = ({ children }: { children: ReactNode }) => {
     return { user, wallet, userOrders, userFundRequests, userHistory };
   };
 
-  const currentUserWallet = wallets.find(w => w.userId === authUser?.uid) || { userId: '', name: '', balance: 0 };
+  const getReferredUsers = (userId: string) => {
+    return users.filter(u => u.referredBy === userId);
+  };
+  
+  const withdrawReferralEarnings = (userId: string) => {
+     setWallets(prevWallets => prevWallets.map(w => {
+        if (w.userId === userId) {
+            addHistoryItem({
+                action: 'Referral Withdrawal',
+                target: `₹${w.referralBalance.toFixed(2)}`,
+                user: w.name,
+                date: new Date().toISOString(),
+            });
+            return { ...w, balance: w.balance + w.referralBalance, referralBalance: 0 };
+        }
+        return w;
+     }));
+  }
+
+  const currentUserWallet = wallets.find(w => w.userId === authUser?.uid) || { userId: '', name: '', balance: 0, referralBalance: 0 };
   
   const userMessages = authUser ? messages.filter(m => m.recipient === 'all' || m.recipient === authUser?.uid) : [];
   
@@ -286,6 +348,7 @@ export const GlobalStateProvider = ({ children }: { children: ReactNode }) => {
     serviceLimits,
     getUserData,
     getTodaysOrderCount,
+    getReferredUsers,
     addOrder,
     updateOrder,
     addFundRequest,
@@ -295,6 +358,7 @@ export const GlobalStateProvider = ({ children }: { children: ReactNode }) => {
     clearInbox,
     setQrCodeUrl,
     setServiceLimits,
+    withdrawReferralEarnings,
   };
 
   return (
