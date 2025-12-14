@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/use-auth';
 import { Header } from '@/components/header';
@@ -31,19 +31,29 @@ export default function ReferralPage() {
   const { toast } = useToast();
   const currentUser = users.find(u => u.id === user?.uid);
   const referredUsers = user ? getReferredUsers(user.uid) : [];
+  
+  const [origin, setOrigin] = useState('');
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      setOrigin(window.location.origin);
+    }
+  }, []);
 
   useEffect(() => {
     if (!loading && !user) {
       router.replace("/");
     }
   }, [user, loading, router]);
+  
+  const referralLink = currentUser ? `${origin}/?ref=${currentUser.referralCode}` : '';
 
   const handleCopyToClipboard = () => {
-    if (!currentUser) return;
-    navigator.clipboard.writeText(currentUser.referralCode);
+    if (!referralLink) return;
+    navigator.clipboard.writeText(referralLink);
     toast({
       title: "Copied!",
-      description: "Your referral code has been copied to the clipboard.",
+      description: "Your referral link has been copied to the clipboard.",
     });
   };
 
@@ -75,14 +85,14 @@ export default function ReferralPage() {
             <CardHeader>
               <CardTitle>How it Works</CardTitle>
               <CardDescription>
-                Invite a friend with your unique referral code. When they sign up and add funds to their wallet, you'll earn a **7% commission** on the amount they add. This is a lifetime reward, so you'll earn from every deposit they make, forever!
+                Invite a friend with your unique referral link. When they sign up and add funds to their wallet, you'll earn a **7% commission** on the amount they add. This is a lifetime reward, so you'll earn from every deposit they make, forever!
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <p className="text-sm font-semibold mb-2">Your Unique Referral Code</p>
+                <p className="text-sm font-semibold mb-2">Your Unique Referral Link</p>
                 <div className="flex items-center gap-2 p-3 bg-muted/50 rounded-lg border">
-                  <span className="text-lg font-mono tracking-widest flex-grow">{currentUser.referralCode}</span>
+                  <span className="text-lg font-mono tracking-widest flex-grow overflow-x-auto whitespace-nowrap no-scrollbar">{referralLink}</span>
                   <Button onClick={handleCopyToClipboard} size="icon" variant="ghost">
                     <Copy className="h-5 w-5" />
                   </Button>
@@ -91,7 +101,7 @@ export default function ReferralPage() {
             </CardContent>
           </Card>
           
-          <div className="grid md:grid-cols-2 gap-8 mb-8">
+          <div className="grid md:grid-cols-2 gap-4 mb-8">
             <Card className="shadow-xl bg-card/10 backdrop-blur-lg border-border/20">
                 <CardHeader className="flex flex-row items-center justify-between pb-2">
                     <CardTitle className="text-sm font-medium">Referral Earnings</CardTitle>
@@ -162,6 +172,16 @@ export default function ReferralPage() {
                 )}
               </CardContent>
           </Card>
+          
+          <style jsx>{`
+            .no-scrollbar::-webkit-scrollbar {
+                display: none;
+            }
+            .no-scrollbar {
+                -ms-overflow-style: none;
+                scrollbar-width: none;
+            }
+          `}</style>
 
         </div>
       </main>

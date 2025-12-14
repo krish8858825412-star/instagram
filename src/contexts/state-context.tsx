@@ -96,12 +96,22 @@ interface GlobalState {
 // Create the context
 const GlobalStateContext = createContext<GlobalState | undefined>(undefined);
 
+// Helper function to get referral code from local storage
+const getReferralCodeFromStorage = () => {
+    if (typeof window === 'undefined') return null;
+    const params = new URLSearchParams(window.location.search);
+    const ref = params.get('ref');
+    if (ref) {
+        localStorage.setItem('referralCode', ref);
+        return ref;
+    }
+    return localStorage.getItem('referralCode');
+}
+
 // Create a provider component
 export const GlobalStateProvider = ({ children }: { children: ReactNode }) => {
   const { user: authUser } = useAuth();
 
-  // NOTE: We are replacing localStorage with component state as a first step.
-  // The next step will be to connect this to Firebase.
   const [users, setUsers] = useState<User[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
   const [wallets, setWallets] = useState<Wallet[]>([]);
@@ -121,23 +131,31 @@ export const GlobalStateProvider = ({ children }: { children: ReactNode }) => {
     if (authUser) {
       const userExists = users.some(u => u.id === authUser.uid);
       if (!userExists) {
-        // A real app would get referral code from URL params or local storage during sign up
-        // For now, we'll simulate it.
-        const referralCodeInput = 'TESTREF1'; // This would be dynamic
+        const referralCodeInput = getReferralCodeFromStorage();
         const referrer = users.find(u => u.referralCode === referralCodeInput);
 
         const newUser: User = {
           id: authUser.uid,
           name: authUser.displayName || `User ${authUser.uid.substring(0, 5)}`,
           email: authUser.email || '',
-          phone: authUser.phoneNumber || '',
+          phone: authUser.phoneNumber || '', // This needs to be captured at sign-up
           date: new Date().toISOString(),
-          referralCode: `${(authUser.displayName || 'USER').toUpperCase()}${Date.now().toString().slice(-4)}`,
+          referralCode: `${(authUser.displayName || 'USER').toUpperCase().slice(0,4)}${Date.now().toString().slice(-4)}`,
           referredBy: referrer?.id,
         };
+        
+        // This is a workaround to get phone number from auth context on sign up
+        // In a real app, this would be part of the same object
+        if (!newUser.phone) {
+             const tempPhone = localStorage.getItem(`temp_phone_${authUser.uid}`);
+             if (tempPhone) {
+                newUser.phone = tempPhone;
+                localStorage.removeItem(`temp_phone_${authUser.uid}`);
+             }
+        }
+
 
         setUsers(prevUsers => {
-          // Double check to prevent race conditions
           if (!prevUsers.some(u => u.id === authUser.uid)) {
             const historyItem: HistoryItem = {
               action: 'User Registered',
@@ -164,7 +182,9 @@ export const GlobalStateProvider = ({ children }: { children: ReactNode }) => {
                 date: new Date().toISOString(),
             };
             setMessages(prev => [...prev, welcomeMessage]);
-
+            if (typeof window !== 'undefined') {
+              localStorage.removeItem('referralCode');
+            }
             return [...prevUsers, newUser];
           }
           return prevUsers;

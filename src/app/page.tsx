@@ -5,7 +5,7 @@ import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import {
@@ -36,6 +36,7 @@ const signUpSchema = z.object({
   password: z
     .string()
     .min(6, { message: "Password must be at least 6 characters." }),
+  referralCode: z.string().optional(),
 });
 
 const signInSchema = z.object({
@@ -55,6 +56,7 @@ export default function AuthPage() {
     signIn,
   } = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [passwordStrength, setPasswordStrength] = useState({ score: 0, label: '', color: '' });
@@ -77,6 +79,7 @@ export default function AuthPage() {
       email: "",
       phone: "",
       password: "",
+      referralCode: searchParams.get('ref') || '',
     },
   });
 
@@ -141,8 +144,8 @@ export default function AuthPage() {
     setIsSubmitting(true);
     try {
       if (isSigningUp) {
-        const { name, email, password, phone } = values as z.infer<typeof signUpSchema>;
-        await signUp(name, email, password, phone);
+        const { name, email, password, phone, referralCode } = values as z.infer<typeof signUpSchema>;
+        await signUp(name, email, password, phone, referralCode);
         toast({
           title: "Success",
           description: "Account created successfully. Please sign in.",
@@ -181,7 +184,13 @@ export default function AuthPage() {
     setIsSigningUp(!isSigningUp);
     setIsAdminMode(false);
     setPasswordStrength({ score: 0, label: '', color: '' });
-    form.reset();
+    form.reset({
+        name: "",
+        email: "",
+        phone: "",
+        password: "",
+        referralCode: searchParams.get('ref') || '',
+    });
   }
 
   if (authLoading || user) {
@@ -303,6 +312,9 @@ export default function AuthPage() {
                             <p className="text-xs text-muted-foreground">Password strength: <span className="font-semibold">{passwordStrength.label}</span></p>
                           </div>
                       )}
+                      {isSigningUp && form.getValues('referralCode') && (
+                        <p className="text-sm text-green-500">Referral code applied: {form.getValues('referralCode')}</p>
+                      )}
                     </div>
 
                     <Button type="submit" className="w-full" disabled={isSubmitting}>
@@ -330,5 +342,3 @@ export default function AuthPage() {
     </>
   );
 }
-
-    
