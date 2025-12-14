@@ -200,7 +200,7 @@ export default function AuthPage() {
           </h1>
            <p className="text-muted-foreground mt-2">The best place to boost your social presence.</p>
         </div>
-        <Card className="w-full max-w-md bg-card/10 backdrop-blur-lg border-border/20 shadow-xl">
+        <Card className="w-full max-w-md bg-card/10 backdrop-blur-lg border-border/20 shadow-xl animation-focus-in">
           <CardHeader className="text-center">
             <CardTitle className="text-2xl font-bold tracking-tight">
               {isAdminMode ? "Admin Access" : isSigningUp ? "Create an Account" : "Welcome Back"}
