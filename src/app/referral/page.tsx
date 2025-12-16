@@ -33,22 +33,12 @@ export default function ReferralPage() {
   const currentUser = users.find(u => u.id === user?.uid);
   const referredUsers = user ? getReferredUsers(user.uid) : [];
   
-  const [origin, setOrigin] = useState('');
-
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      setOrigin(window.location.origin);
-    }
-  }, []);
-
   useEffect(() => {
     if (!loading && !user) {
       router.replace("/");
     }
   }, [user, loading, router]);
   
-  const referralLink = currentUser ? `${origin}/?ref=${currentUser.referralCode}` : '';
-
   const handleCopyToClipboard = (textToCopy: string) => {
     navigator.clipboard.writeText(textToCopy);
     toast({
@@ -85,21 +75,12 @@ export default function ReferralPage() {
             <CardHeader>
               <CardTitle>How it Works</CardTitle>
               <CardDescription>
-                Invite a friend with your unique referral link. When they sign up and add funds to their wallet, you'll earn a **7% commission** on the amount they add. This is a lifetime reward, so you'll earn from every deposit they make, forever!
+                Invite a friend with your unique referral code. When they sign up and add funds to their wallet, you'll earn a **7% commission** on the amount they add. This is a lifetime reward, so you'll earn from every deposit they make, forever!
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-              <div>
-                <p className="text-sm font-semibold mb-2">Your Unique Referral Link</p>
-                <div className="flex items-center gap-2">
-                  <Input value={referralLink} readOnly className="font-mono tracking-wider"/>
-                  <Button onClick={() => handleCopyToClipboard(referralLink)} size="icon" variant="ghost">
-                    <Copy className="h-5 w-5" />
-                  </Button>
-                </div>
-              </div>
                <div>
-                <p className="text-sm font-semibold mb-2">Your Referral Code</p>
+                <p className="text-sm font-semibold mb-2">Your Unique Referral Code</p>
                 <div className="flex items-center gap-2">
                    <Input value={currentUser.referralCode} readOnly className="font-mono tracking-widest"/>
                   <Button onClick={() => handleCopyToClipboard(currentUser.referralCode)} size="icon" variant="ghost">

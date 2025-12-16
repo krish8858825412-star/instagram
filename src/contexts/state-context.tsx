@@ -152,7 +152,7 @@ export const GlobalStateProvider = ({ children }: { children: ReactNode }) => {
             email: authUser.email || '',
             phone: '', 
             date: new Date().toISOString(),
-            referralCode: `${(authUser.displayName || 'USER').toUpperCase().replace(/\s/g, '').slice(0, 4)}${Math.random().toString(36).substring(2, 6).toUpperCase()}`,
+            referralCode: Math.random().toString(36).substring(2, 12).toUpperCase(),
             referredBy: referrer?.id,
           };
 

@@ -5,7 +5,7 @@ import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import {
@@ -48,10 +48,8 @@ const ADMIN_SECRET_CODE = "99241%@8#₹₹1625";
 
 export default function AuthPage() {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const refCodeFromUrl = searchParams.get('ref');
-
-  const [isSigningUp, setIsSigningUp] = useState(!!refCodeFromUrl);
+  
+  const [isSigningUp, setIsSigningUp] = useState(false);
   const [isAdminMode, setIsAdminMode] = useState(false);
   const {
     user,
@@ -82,7 +80,7 @@ export default function AuthPage() {
       email: "",
       phone: "",
       password: "",
-      referralCode: refCodeFromUrl || '',
+      referralCode: '',
     },
   });
 
@@ -192,7 +190,7 @@ export default function AuthPage() {
         email: "",
         phone: "",
         password: "",
-        referralCode: searchParams.get('ref') || '',
+        referralCode: '',
     });
   }
 
@@ -360,5 +358,3 @@ export default function AuthPage() {
     </>
   );
 }
-
-    
