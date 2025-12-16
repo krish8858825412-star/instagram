@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useEffect } from 'react';
@@ -17,7 +18,7 @@ import { Badge } from '@/components/ui/badge';
 export default function WalletPage() {
   const { user, loading } = useAuth();
   const router = useRouter();
-  const { wallet, history } = useGlobalState();
+  const { wallet, history, orders } = useGlobalState();
   
   useEffect(() => {
     if (!loading && !user) {
@@ -31,8 +32,50 @@ export default function WalletPage() {
   }
 
   const walletHistory = history.filter(item => 
-    item.user === (user?.displayName || 'User') && (item.action === 'Added Funds' || item.action === 'Placed Order')
+    (item.user === user?.displayName || item.user === user?.uid) && (item.action === 'Added Funds' || item.action === 'Placed Order' || item.action === 'Created Fund Request' || item.action === 'Referral Withdrawal')
   ).sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
+
+  const getTransactionDetails = (item: typeof walletHistory[0]) => {
+    if (item.action === 'Placed Order') {
+      const order = orders.find(o => o.id === item.target);
+      if (order) {
+        return {
+          details: `Order for ${order.service}`,
+          amount: `- ₹${order.price.toFixed(2)}`,
+          isCredit: false
+        };
+      }
+    }
+    if (item.action === 'Added Funds') {
+        return {
+            details: 'Fund Request Approved',
+            amount: `+ ${item.target}`,
+            isCredit: true
+        }
+    }
+    if(item.action === 'Created Fund Request') {
+      const fundRequest = walletHistory.find(h => h.target === item.target && h.action !== 'Created Fund Request');
+      // Don't show this in history if it's already approved/declined
+      if(fundRequest) return null;
+
+       return {
+            details: `Fund Request Pending (ID: ${item.target})`,
+            amount: 'Pending',
+            isCredit: null
+        }
+    }
+
+    if(item.action === 'Referral Withdrawal') {
+        return {
+            details: 'Referral Earnings Withdrawal',
+            amount: `+ ${item.target}`,
+            isCredit: true
+        }
+    }
+
+    return null;
+  }
 
   return (
     <div className="flex min-h-screen w-full flex-col">
@@ -72,23 +115,38 @@ export default function WalletPage() {
                         </TableHeader>
                         <TableBody>
                           {walletHistory.map((item, index) => {
-                            const isCredit = item.action === 'Added Funds';
+                            const details = getTransactionDetails(item);
+                            if(!details) return null;
+
+                            const { details: transactionDetails, amount, isCredit } = details;
+                            
+                            const getBadgeVariant = () => {
+                                if (isCredit === true) return 'bg-green-500/20 text-green-500 border-green-500/30';
+                                if (isCredit === false) return 'bg-red-500/20 text-red-500 border-red-500/30';
+                                return 'secondary';
+                            }
+                            const getIcon = () => {
+                                if (isCredit === true) return <PlusCircle className='mr-2' />;
+                                if (isCredit === false) return <MinusCircle className='mr-2' />;
+                                return <ShoppingCart className='mr-2' />;
+                            }
+
                             return (
                               <TableRow key={index}>
                                 <TableCell>
-                                    <Badge variant={isCredit ? 'default' : 'secondary'} className={isCredit ? 'bg-green-500/20 text-green-500 border-green-500/30' : 'bg-red-500/20 text-red-500 border-red-500/30'}>
-                                    {isCredit ? <PlusCircle className='mr-2' /> : <MinusCircle className='mr-2' />}
-                                    {isCredit ? 'Credit' : 'Debit'}
+                                    <Badge variant={'outline'} className={getBadgeVariant()}>
+                                    {getIcon()}
+                                    {isCredit === true ? 'Credit' : isCredit === false ? 'Debit' : 'Info'}
                                   </Badge>
                                 </TableCell>
                                 <TableCell>
                                   <div className="font-medium">{item.action}</div>
                                   <div className="text-sm text-muted-foreground">
-                                    {isCredit ? `Fund Request Approved` : `Order ID: ${item.target}`}
+                                    {transactionDetails}
                                   </div>
                                 </TableCell>
-                                <TableCell className={`text-right font-semibold ${isCredit ? 'text-green-500' : 'text-red-500'}`}>
-                                  {isCredit ? '+' : '-'} {item.action === 'Placed Order' ? `₹${(wallet.balance - (wallet.balance + parseFloat(item.target.replace('₹','')))).toFixed(2)}` : item.target }
+                                <TableCell className={`text-right font-semibold ${isCredit === true ? 'text-green-500' : isCredit === false ? 'text-red-500' : ''}`}>
+                                 {amount}
                                 </TableCell>
                                 <TableCell>{new Date(item.date).toLocaleString()}</TableCell>
                               </TableRow>
