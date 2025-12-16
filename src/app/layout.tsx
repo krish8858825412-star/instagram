@@ -10,7 +10,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'Instagram',
     description: 'The best place to boost your social presence.',
-    images: [{ url: 'https://i.ibb.co/dJ72Lz7/image.png' }],
+    images: [{ url: 'https://i.ibb.co/CbrzLNh/logo.png' }],
   },
 };
 
