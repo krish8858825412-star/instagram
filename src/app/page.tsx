@@ -47,7 +47,11 @@ const signInSchema = z.object({
 const ADMIN_SECRET_CODE = "99241%@8#₹₹1625";
 
 export default function AuthPage() {
-  const [isSigningUp, setIsSigningUp] = useState(false);
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const refCodeFromUrl = searchParams.get('ref');
+
+  const [isSigningUp, setIsSigningUp] = useState(!!refCodeFromUrl);
   const [isAdminMode, setIsAdminMode] = useState(false);
   const {
     user,
@@ -55,8 +59,7 @@ export default function AuthPage() {
     signUp,
     signIn,
   } = useAuth();
-  const router = useRouter();
-  const searchParams = useSearchParams();
+  
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [passwordStrength, setPasswordStrength] = useState({ score: 0, label: '', color: '' });
@@ -79,7 +82,7 @@ export default function AuthPage() {
       email: "",
       phone: "",
       password: "",
-      referralCode: searchParams.get('ref') || '',
+      referralCode: refCodeFromUrl || '',
     },
   });
 
@@ -357,3 +360,5 @@ export default function AuthPage() {
     </>
   );
 }
+
+    
