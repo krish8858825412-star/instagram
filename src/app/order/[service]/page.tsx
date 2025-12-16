@@ -142,8 +142,14 @@ export default function ServiceOrderPage() {
     setIsSubmitting(true);
     
     setTimeout(() => {
+      const generateUniqueId = (prefix: string) => {
+          const timestamp = Date.now().toString(36);
+          const randomPart = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+          return `${prefix}${timestamp}${randomPart}`.substring(0, 30).toUpperCase();
+      };
+      
       const newOrder = {
-        id: `ORD${String(Date.now()).slice(-4)}`,
+        id: generateUniqueId('ORD-'),
         user: user?.displayName || 'Unknown User',
         userId: user.uid,
         service: details.title,
@@ -305,5 +311,3 @@ export default function ServiceOrderPage() {
     </>
   );
 }
-
-    

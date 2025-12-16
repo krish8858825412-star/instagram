@@ -47,7 +47,13 @@ export default function AddFundsPage() {
     setIsSubmitting(true);
 
     setTimeout(() => {
-        const newRequestId = `FUND${String(Date.now()).slice(-4)}`;
+        const generateUniqueId = (prefix: string) => {
+            const timestamp = Date.now().toString(36);
+            const randomPart = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+            return `${prefix}${timestamp}${randomPart}`.substring(0, 30).toUpperCase();
+        };
+
+        const newRequestId = generateUniqueId('FUND-');
         const newRequest = {
             id: newRequestId,
             user: user?.displayName || 'Unknown User',
